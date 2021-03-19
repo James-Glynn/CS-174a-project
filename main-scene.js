@@ -46,11 +46,7 @@ Object.assign( defs,
 
 // (Can define Main_Scene's class here)
 
-<<<<<<< HEAD
-const Main_Scene = Collision_Demo;
-=======
 const Main_Scene = Project;
->>>>>>> movement
 const Additional_Scenes = [];
 
 export { Main_Scene, Additional_Scenes, Canvas_Widget, Code_Widget, Text_Widget, defs }
