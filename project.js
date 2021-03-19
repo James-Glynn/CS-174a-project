@@ -11,31 +11,25 @@ export class Project extends Scene
                               // need to affect every single shape in the scene.
   constructor()
     { super();
-                              // Define how many boxes (buildings) to draw:
-      Object.assign( this, { rows: 20, columns: 35 } );
 
-      this.shapes = { cube: new defs.Cube() };
-      const shader = new defs.Fake_Bump_Map();
-      this.brick = new Material( shader, { color: color( 1,1,1,1 ),
-                                 ambient: .05, diffusivity: .5, specularity: .5, smoothness: 10, 
-                                 texture: new Texture( "assets/rgb.jpg" ) });
-     
-                                      // Don't create any DOM elements to control this scene:
-      this.widget_options = { make_controls: false };
+      // TODO: define shapes
+      this.shapes = {};
+
+      // TODO: define materials
+      this.materials = {};
+
+      // TODO: inititial camera location
+      // ^ This step may be better done in the display funciton
+
+      // TODO: Bool flags/ scene-wide variables
+
+
+                              
       
-      this.box_positions = [];    this.row_lights = {};    this.column_lights = {};
-                              // Make initial grid of boxes at random heights:
-      for(   let row = 0;       row < this.rows;       row++ ) 
-        for( let column = 0; column < this.columns; column++ )
-          this.box_positions.push( vec3( row, -2-2*Math.random(), -column ).randomized( 1 ) );
-
-        // The lights lists will function as a lookup table for the light in a current row and column:
-        // Make initial light positions.  One light per row, and one light per column:
-      for( let c = 0; c < this.columns; c++ )
-        this.row_lights    [ ~~(-c) ] = vec3( 2*Math.random()*this.rows, -Math.random(), -c     );
-      for( let r = 0; r < this.rows;    r++ )
-        this.column_lights [ ~~( r) ] = vec3( r, -Math.random(), -2*Math.random()*this.columns  );
     }
+
+  // TODO: make control pannel
+
   display( context, program_state )
     {                                         // display():  Draw each frame to animate the scene.
       program_state.set_camera( Mat4.look_at( vec3( this.rows/2,5,5 ), vec3( this.rows/2,0,-4 ), vec3( 0,1,0 ) ) );
