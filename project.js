@@ -34,25 +34,13 @@ export class Project extends Scene {
         this.materials = {
             test: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
-            mat_sun: new Material(new defs.Phong_Shader(),
-                {ambient: 1, diffusivity: .1, specularity: 0.0, color: hex_color("#ffffff")}),
-            mat_plan1: new Material(new defs.Phong_Shader(),
-                {ambient: 0.3, diffusivity: 1, specularity: 0.0, color: hex_color("#B0C4DE")}),
-            mat_plan2_phong: new Material(new defs.Phong_Shader(),
-                {ambient: 0.4, diffusivity: 0.3, specularity: 1, color: hex_color("#00D494")}),
-            mat_plan2_gouraud: new Material(new Gouraud_Shader(),
-                {ambient: 0.0, diffusivity: 0.3, specularity: 1, color: hex_color("#00D494")}),
-            mat_plan3: new Material(new defs.Phong_Shader(),
-                {ambient: 0.3, diffusivity: 1, specularity: 1, color: hex_color("#FF8C00")}),
-            mat_plan4: new Material(new defs.Phong_Shader(),
-                {ambient: 0.0, diffusivity: 0.6, specularity: 0.8, smoothness: 80, color: hex_color("#89CFF0")}),
             test2: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#992828")}),
             ring: new Material(new Ring_Shader()),
             texture_sample: new Material(new Textured_Phong(), {
-                color: hex_color("#000000"),
-                ambient: 1.0,
-                texture: new Texture("assets/stars.png", "LINEAR_MIPMAP_LINEAR")
+                color: hex_color("#999999"),
+                ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
             }),
         }
 
@@ -114,12 +102,12 @@ export class Project extends Scene {
         model_transform_ground = model_transform_ground.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
         model_transform_ground = model_transform_ground.times(Mat4.translation(0, 0, 1));
         model_transform_ground = model_transform_ground.times(Mat4.scale(100, 100, 100));
-        this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.mat_plan2_phong);
+        this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.test);
 
         // New: object
         let model_transform_object = Mat4.identity();
         model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 0));
-        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.mat_plan1);
+        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
 
         // Point light source @ sun position TODO: is this light correct?
         //const light_position_sun = vec4(0, 0, 0, 1);
