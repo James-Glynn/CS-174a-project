@@ -1,8 +1,10 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Texture, Material, Scene,
 } = tiny;
+
+const {Cube, Axis_Arrows, Textured_Phong} = defs
 
 export class Project extends Scene {
     constructor() {
@@ -11,6 +13,7 @@ export class Project extends Scene {
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
+            box: new defs.Cube(),
             torus: new defs.Torus(15, 15),
             torus2: new defs.Torus(3, 15),
             sphere_sun: new defs.Subdivision_Sphere(4),
@@ -32,7 +35,7 @@ export class Project extends Scene {
             mat_sun: new Material(new defs.Phong_Shader(),
                 {ambient: 1, diffusivity: .1, specularity: 0.0, color: hex_color("#ffffff")}),
             mat_plan1: new Material(new defs.Phong_Shader(),
-                {ambient: 0.0, diffusivity: 1, specularity: 0.0, color: hex_color("#B0C4DE")}),
+                {ambient: 0.3, diffusivity: 1, specularity: 0.0, color: hex_color("#B0C4DE")}),
             mat_plan2_phong: new Material(new defs.Phong_Shader(),
                 {ambient: 0.0, diffusivity: 0.3, specularity: 1, color: hex_color("#00D494")}),
             mat_plan2_gouraud: new Material(new Gouraud_Shader(),
@@ -44,8 +47,11 @@ export class Project extends Scene {
             test2: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#992828")}),
             ring: new Material(new Ring_Shader()),
-            // TODO:  Fill in as many additional material objects as needed in this key/value table.
-            //        (Requirement 4)
+            texture_sample: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"),
+                ambient: 1.0,
+                texture: new Texture("assets/stars.png", "LINEAR_MIPMAP_LINEAR")
+            }),
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -88,8 +94,8 @@ export class Project extends Scene {
             Math.PI / 4, context.width / context.height, .1, 1000);
 
         // TODO: Do we want both lights?
-        //const light_position = vec4(0, 5, 5, 1);
-        //program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+        const light_position = vec4(0, 5, 5, 1);
+        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
         program_state.lights = [];
 
 
@@ -113,6 +119,11 @@ export class Project extends Scene {
         this.wobble_angle = this.wobble_angle - (adjustment * 2 * Math.PI);
 
         var orbit_distance = 5;
+
+        // NEW: Skybox
+        let model_transform_sky = Mat4.identity();
+        model_transform_sky = model_transform_sky.times(Mat4.scale(100, 100, 100));
+        this.shapes.box.draw(context, program_state, model_transform_sky, this.materials.texture_jerry)
 
         /* SUN */        
         let model_transform_sun = Mat4.identity();
