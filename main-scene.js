@@ -29,8 +29,8 @@ import { Text_Demo }
 import { Transforms_Sandbox }
   from "./examples/transforms-sandbox.js"
 import { Project }
-  from "./Project.js"
-
+  from "./project.js"
+  
 Object.assign( defs,
                      { Axes_Viewer, Axes_Viewer_Test_Scene },
                      { Inertia_Demo, Collision_Demo },
