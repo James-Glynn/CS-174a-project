@@ -44,6 +44,8 @@ export class Project extends Scene {
         
         //height of player
         this.height = 6;
+        this.right_turn = false;
+        this.left_turn = false;
 
     }
 
@@ -58,6 +60,10 @@ export class Project extends Scene {
         this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
         this.new_line();
         this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
+        this.key_triggered_button("Rotate right", ["e"], () => this.right_turn = true, true, () => this.right_turn = false);
+        this.key_triggered_button("Rotate left", ["q"], () => this.left_turn = true, true, () => this.left_turn = false);
+        this.new_line();
+        //this.key_triggered_button( "Left",   [ "a" ], () => this.thrust[0] =  1, undefined, () => this.thrust[0] = 0 );
     }
 
     display(context, program_state) {
@@ -100,29 +106,20 @@ export class Project extends Scene {
 
 
 
-
-
-
-
-
-
-        //console.log(program_state.camera_transform);
         let character_position = vec3(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3]);
-        //console.log(character_position);
         
-        let new_at = character_position.plus(vec3(0, -0.15, 10));
 
+
+        let temp_camera = program_state.camera_transform;
         
-        //console.log("new at: " + new_at);
-        let new_cam_transform = Mat4.look_at(character_position, new_at, vec3(0, 1, 0));
-        program_state.set_camera(new_cam_transform);
 
-        // New: object
-        let model_transform_object = Mat4.identity();
-        model_transform_object = model_transform_object.times(Mat4.translation(program_state.camera_transform[0][3], 0, program_state.camera_transform[2][3]))
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 17))
+        let model_transform_object = program_state.camera_transform;
+        //model_transform_object = model_transform_object.times(Mat4.translation(program_state.camera_transform[0][3], 0, program_state.camera_transform[2][3]))
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
                                                        .times(Mat4.scale(1, 4, 1));
+                                                       
         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
+        
     }
 }
 

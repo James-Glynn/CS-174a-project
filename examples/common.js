@@ -774,14 +774,15 @@ class Movement_Controls extends Scene
     {                                 // make_control_panel(): Sets up a panel of interactive HTML elements, including
                                       // buttons with key bindings for affecting this scene, and live info readouts.
       this.control_panel.innerHTML += "Click and drag the scene to <br> spin your viewpoint around it.<br>";
-      this.key_triggered_button( "Up",     [ " " ], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0 );
+      //this.key_triggered_button( "Up",     [ " " ], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0 );
       this.key_triggered_button( "Forward",[ "w" ], () => this.thrust[2] =  1, undefined, () => this.thrust[2] = 0 );
       this.new_line();
       this.key_triggered_button( "Left",   [ "a" ], () => this.thrust[0] =  1, undefined, () => this.thrust[0] = 0 );
       this.key_triggered_button( "Back",   [ "s" ], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0 );
       this.key_triggered_button( "Right",  [ "d" ], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0 );
       this.new_line();
-      this.key_triggered_button( "Down",   [ "z" ], () => this.thrust[1] =  1, undefined, () => this.thrust[1] = 0 ); 
+      // Keiran: Commented out for custom control
+      //this.key_triggered_button( "Down",   [ "z" ], () => this.thrust[1] =  1, undefined, () => this.thrust[1] = 0 ); 
 
       const speed_controls = this.control_panel.appendChild( document.createElement( "span" ) );
       speed_controls.style.margin = "30px";
@@ -794,7 +795,8 @@ class Movement_Controls extends Scene
       this.key_triggered_button( "Roll left",  [ "," ], () => this.roll =  1, undefined, () => this.roll = 0 );
       this.key_triggered_button( "Roll right", [ "." ], () => this.roll = -1, undefined, () => this.roll = 0 );
       this.new_line();
-      this.key_triggered_button( "(Un)freeze mouse look around", [ "f" ], () => this.look_around_locked ^=  1, "green" );
+      // Keiran: Commented out for custom control
+      //this.key_triggered_button( "(Un)freeze mouse look around", [ "f" ], () => this.look_around_locked ^=  1, "green" );
       this.new_line();
       this.live_string( box => box.textContent = "Position: " + this.pos[0].toFixed(2) + ", " + this.pos[1].toFixed(2) 
                                                        + ", " + this.pos[2].toFixed(2) );
@@ -832,8 +834,10 @@ class Movement_Controls extends Scene
   first_person_flyaround( radians_per_frame, meters_per_frame, leeway = 70 )
     {                                                     // (Internal helper function)
                                                           // Compare mouse's location to all four corners of a dead box:
-      const offsets_from_dead_box = { plus: [ this.mouse.from_center[0] + leeway, this.mouse.from_center[1] + leeway ],
-                                     minus: [ this.mouse.from_center[0] - leeway, this.mouse.from_center[1] - leeway ] }; 
+                                                          
+// Keiran: Commented out for custom control
+//       const offsets_from_dead_box = { plus: [ this.mouse.from_center[0] + leeway, this.mouse.from_center[1] + leeway ],
+//                                      minus: [ this.mouse.from_center[0] - leeway, this.mouse.from_center[1] - leeway ] }; 
                                                           // Apply a camera rotation movement, but only when the mouse is
                                                           // past a minimum distance (leeway) from the canvas's center:
       if( !this.look_around_locked )
@@ -847,8 +851,8 @@ class Movement_Controls extends Scene
           this.matrix().post_multiply( Mat4.rotation( -velocity,   i, 1-i, 0 ) );
           this.inverse().pre_multiply( Mat4.rotation( +velocity,   i, 1-i, 0 ) );
         }
-      this.matrix().post_multiply( Mat4.rotation( -.1 * this.roll,   0,0,1 ) );
-      this.inverse().pre_multiply( Mat4.rotation( +.1 * this.roll,   0,0,1 ) );
+      this.matrix().post_multiply( Mat4.rotation( +.025 * this.roll,   0,1,0 ) );
+      this.inverse().pre_multiply( Mat4.rotation( -.025 * this.roll,   0,1,0 ) );
                                     // Now apply translation movement of the camera, in the newest local coordinate frame.
       this.matrix().post_multiply( Mat4.translation( ...this.thrust.times( -meters_per_frame ) ) );
       this.inverse().pre_multiply( Mat4.translation( ...this.thrust.times( +meters_per_frame ) ) );
@@ -880,15 +884,17 @@ class Movement_Controls extends Scene
         this.will_take_over_graphics_state = false;
       }
 
-      if( !this.mouse_enabled_canvases.has( context.canvas ) )
-      { this.add_mouse_controls( context.canvas );
-        this.mouse_enabled_canvases.add( context.canvas )
-      }
+// Keiran: Commented out for custom control
+//       if( !this.mouse_enabled_canvases.has( context.canvas ) )
+//       { this.add_mouse_controls( context.canvas );
+//         this.mouse_enabled_canvases.add( context.canvas )
+//       }
                                      // Move in first-person.  Scale the normal camera aiming speed by dt for smoothness:
       this.first_person_flyaround( dt * r, dt * m );
                                      // Also apply third-person "arcball" camera mode if a mouse drag is occurring:
-      if( this.mouse.anchor )
-        this.third_person_arcball( dt * r );           
+// Keiran: Commented out for custom control
+//       if( this.mouse.anchor )
+//         this.third_person_arcball( dt * r );           
                                      // Log some values:
       this.pos    = this.inverse().times( vec4( 0,0,0,1 ) );
       this.z_axis = this.inverse().times( vec4( 0,0,1,0 ) );
