@@ -14,17 +14,8 @@ export class Project extends Scene {
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             box: new defs.Cube(),
-            sky_sphere: new defs.Subdivision_Sphere(2),
+            sky_sphere: new defs.Subdivision_Sphere(4),
             plane: new defs.Square(),
-            torus: new defs.Torus(15, 15),
-            torus2: new defs.Torus(3, 15),
-            sphere_sun: new defs.Subdivision_Sphere(4),
-            sphere_plan1: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(2),
-            sphere_plan2: new defs.Subdivision_Sphere(3),
-            sphere_plan3: new defs.Subdivision_Sphere(4),
-            torus_plan3: new defs.Torus(15, 15),
-            sphere_plan4: new defs.Subdivision_Sphere(4),
-            sphere_plan4_moon: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(1),
             circle: new defs.Regular_2D_Polygon(1, 15),
             // TODO:  Fill in as many additional shape instances as needed in this key/value table.
             //        (Requirement 1)
@@ -49,17 +40,10 @@ export class Project extends Scene {
             }),
         }
         this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
-        this.initial_camera_location = Mat4.look_at(vec3(0, 2, -10), vec3(0, 2, 0), vec3(0, 1, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(0, 5.5, -2), vec3(0, 5.5, -3), vec3(0, 1, 0));
         
-        // Var for the rotation angle (rate) of the planets
-        this.rotation_angles = []; 
-        this.wobble_angle = 0;
-        
-        var i;
-        for(i = 0; i < 5; i++) {
-            this.rotation_angles.push(i * 0.5 * Math.PI);
-        }
-
+        //height of player
+        this.height = 6;
 
     }
 
@@ -99,14 +83,14 @@ export class Project extends Scene {
         
         // NEW: Skybox
         let model_transform_sky = Mat4.identity();
-        model_transform_sky = model_transform_sky.times(Mat4.scale(100, 100, 100));
+        model_transform_sky = model_transform_sky.times(Mat4.scale(400, 400, 400));
         this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
 
         // New: Ground
         let model_transform_ground = Mat4.identity();
         model_transform_ground = model_transform_ground.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
         model_transform_ground = model_transform_ground.times(Mat4.translation(0, 0, 1));
-        model_transform_ground = model_transform_ground.times(Mat4.scale(100, 100, 100));
+        model_transform_ground = model_transform_ground.times(Mat4.scale(400, 400, 400));
         this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.grass);
 
 //         // New: object
@@ -123,10 +107,10 @@ export class Project extends Scene {
 
 
         //console.log(program_state.camera_transform);
-        let character_position = vec3(program_state.camera_transform[0][3], 2, program_state.camera_transform[2][3]);
+        let character_position = vec3(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3]);
         //console.log(character_position);
         
-        let new_at = character_position.plus(vec3(0, -0.25, 10));
+        let new_at = character_position.plus(vec3(0, -0.15, 10));
 
         
         //console.log("new at: " + new_at);
@@ -136,7 +120,8 @@ export class Project extends Scene {
         // New: object
         let model_transform_object = Mat4.identity();
         model_transform_object = model_transform_object.times(Mat4.translation(program_state.camera_transform[0][3], 0, program_state.camera_transform[2][3]))
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 15));
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 17))
+                                                       .times(Mat4.scale(1, 4, 1));
         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
     }
 }
