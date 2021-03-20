@@ -42,9 +42,14 @@ export class Project extends Scene {
                 ambient: .5, diffusivity: 0.1, specularity: 0.1,
                 texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
             }),
+            grass: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"),
+                ambient: .5, diffusivity: 0.5, specularity: 0.4,
+                texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR")
+            }),
         }
-
-        this.initial_camera_location = Mat4.look_at(vec3(0, 0, -1), vec3(0, 0, -2), vec3(0, 1, 0));
+        this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
+        this.initial_camera_location = Mat4.look_at(vec3(0, 4, -9), vec3(0, 0, 6), vec3(0, 1, 0));
         
         // Var for the rotation angle (rate) of the planets
         this.rotation_angles = []; 
@@ -102,7 +107,7 @@ export class Project extends Scene {
         model_transform_ground = model_transform_ground.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
         model_transform_ground = model_transform_ground.times(Mat4.translation(0, 0, 1));
         model_transform_ground = model_transform_ground.times(Mat4.scale(100, 100, 100));
-        this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.test);
+        this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.grass);
 
         // New: object
         let model_transform_object = Mat4.identity();
