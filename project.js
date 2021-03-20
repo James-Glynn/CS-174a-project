@@ -56,7 +56,7 @@ export class Project extends Scene {
             }),
         }
 
-        this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(0, 0, -1), vec3(0, 0, -2), vec3(0, 1, 0));
         
         // Var for the rotation angle (rate) of the planets
         this.rotation_angles = []; 
@@ -111,15 +111,14 @@ export class Project extends Scene {
 
         // New: Ground
         let model_transform_ground = Mat4.identity();
-        //model_transform_ground = model_transform_ground.times(Mat4.scale(100, 100, 100));
         model_transform_ground = model_transform_ground.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
+        model_transform_ground = model_transform_ground.times(Mat4.translation(0, 0, 1));
         model_transform_ground = model_transform_ground.times(Mat4.scale(100, 100, 100));
-        model_transform_ground - model_transform_ground.times(Mat4.translation(-50, 0, 0));
         this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.mat_plan2_phong);
 
         // New: object
         let model_transform_object = Mat4.identity();
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 0.5, 0));
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 0));
         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.mat_plan1);
 
         // Point light source @ sun position TODO: is this light correct?
