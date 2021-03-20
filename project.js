@@ -1,7 +1,7 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Texture, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Texture, Material, Scene, camera_transform
 } = tiny;
 
 const {Cube, Axis_Arrows, Textured_Phong} = defs
@@ -49,7 +49,7 @@ export class Project extends Scene {
             }),
         }
         this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
-        this.initial_camera_location = Mat4.look_at(vec3(0, 4, -9), vec3(0, 0, 6), vec3(0, 1, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(0, 2, -10), vec3(0, 2, 0), vec3(0, 1, 0));
         
         // Var for the rotation angle (rate) of the planets
         this.rotation_angles = []; 
@@ -109,15 +109,34 @@ export class Project extends Scene {
         model_transform_ground = model_transform_ground.times(Mat4.scale(100, 100, 100));
         this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.grass);
 
+//         // New: object
+//         let model_transform_object = Mat4.identity();
+//         model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 0));
+//         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
+
+
+
+
+
+
+
+
+
+        console.log(program_state.camera_transform);
+        let character_position = vec3(program_state.camera_transform[0][3], 2, program_state.camera_transform[2][3]);
+        console.log(character_position);
+        
+        let new_at = character_position.plus(vec3(0, -0.25, 10));
+
+        
+        console.log("new at: " + new_at);
+        let new_cam_transform = Mat4.look_at(character_position, new_at, vec3(0, 1, 0));
+        program_state.set_camera(new_cam_transform);
+
         // New: object
         let model_transform_object = Mat4.identity();
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 0));
+        model_transform_object = new_cam_transform.times(Mat4.translation(0, 0, -6));
         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
-
-        // Point light source @ sun position TODO: is this light correct?
-        //const light_position_sun = vec4(0, 0, 0, 1);
-        //program_state.lights.push(new Light(light_position_sun, color(1, 1, 1, 1), (10 ** scale_sun)));
-
         
 
     }
