@@ -14,6 +14,8 @@ export class Project extends Scene {
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             box: new defs.Cube(),
+            sky_sphere: new defs.Subdivision_Sphere(2),
+            plane: new defs.Square(),
             torus: new defs.Torus(15, 15),
             torus2: new defs.Torus(3, 15),
             sphere_sun: new defs.Subdivision_Sphere(4),
@@ -37,11 +39,11 @@ export class Project extends Scene {
             mat_plan1: new Material(new defs.Phong_Shader(),
                 {ambient: 0.3, diffusivity: 1, specularity: 0.0, color: hex_color("#B0C4DE")}),
             mat_plan2_phong: new Material(new defs.Phong_Shader(),
-                {ambient: 0.0, diffusivity: 0.3, specularity: 1, color: hex_color("#00D494")}),
+                {ambient: 0.4, diffusivity: 0.3, specularity: 1, color: hex_color("#00D494")}),
             mat_plan2_gouraud: new Material(new Gouraud_Shader(),
                 {ambient: 0.0, diffusivity: 0.3, specularity: 1, color: hex_color("#00D494")}),
             mat_plan3: new Material(new defs.Phong_Shader(),
-                {ambient: 0.0, diffusivity: 1, specularity: 1, color: hex_color("#FF8C00")}),
+                {ambient: 0.3, diffusivity: 1, specularity: 1, color: hex_color("#FF8C00")}),
             mat_plan4: new Material(new defs.Phong_Shader(),
                 {ambient: 0.0, diffusivity: 0.6, specularity: 0.8, smoothness: 80, color: hex_color("#89CFF0")}),
             test2: new Material(new Gouraud_Shader(),
@@ -101,121 +103,30 @@ export class Project extends Scene {
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
-        const yellow = hex_color("#fac91a");
         
-        // Rotation angle (rate) for planets
-        var adjustment;
-        var two_pi = 2 * Math.PI;
-
-        var j;
-        for(j = 0; j < 5; j++) {
-            this.rotation_angles[j] += (two_pi * dt) / (5 + j);
-            adjustment = Math.floor(this.rotation_angles[j] / two_pi);
-            this.rotation_angles[j] = this.rotation_angles[j] - (adjustment * two_pi);
-        }
-
-        this.wobble_angle = 0.5 * Math.PI * (0.5 * (Math.sin( (2.0 * Math.PI * t) / 3) + 2.0));
-        var adjustment = Math.floor(this.wobble_angle / (2 * Math.PI));
-        this.wobble_angle = this.wobble_angle - (adjustment * 2 * Math.PI);
-
-        var orbit_distance = 5;
-
         // NEW: Skybox
         let model_transform_sky = Mat4.identity();
         model_transform_sky = model_transform_sky.times(Mat4.scale(100, 100, 100));
-        this.shapes.box.draw(context, program_state, model_transform_sky, this.materials.texture_jerry)
+        this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
 
-        /* SUN */        
-        let model_transform_sun = Mat4.identity();
-        // Should periodically oscillate between [0, 1] every 10 seconds
-        let time_factor_sun = 0.5 * (Math.sin( (2.0 * Math.PI * t) / 10) + 1.0);
-        let scale_sun = 1 + (2 * time_factor_sun);
-        let color_sun = color(time_factor_sun, 0, (1 - time_factor_sun), 1);
-        
+        // New: Ground
+        let model_transform_ground = Mat4.identity();
+        //model_transform_ground = model_transform_ground.times(Mat4.scale(100, 100, 100));
+        model_transform_ground = model_transform_ground.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
+        model_transform_ground = model_transform_ground.times(Mat4.scale(100, 100, 100));
+        model_transform_ground - model_transform_ground.times(Mat4.translation(-50, 0, 0));
+        this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.mat_plan2_phong);
+
+        // New: object
+        let model_transform_object = Mat4.identity();
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 0.5, 0));
+        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.mat_plan1);
+
         // Point light source @ sun position TODO: is this light correct?
-        const light_position_sun = vec4(0, 0, 0, 1);
-        program_state.lights.push(new Light(light_position_sun, color(1, 1, 1, 1), (10 ** scale_sun)));
+        //const light_position_sun = vec4(0, 0, 0, 1);
+        //program_state.lights.push(new Light(light_position_sun, color(1, 1, 1, 1), (10 ** scale_sun)));
 
-        model_transform_sun = model_transform_sun.times(Mat4.scale(scale_sun, scale_sun, scale_sun));
-        this.shapes.sphere_sun.draw(context, program_state, model_transform_sun, this.materials.mat_sun.override({color: color_sun}));
-
-        /* Planet 1 */
-        let model_transform_plan1 = Mat4.identity();
-        model_transform_plan1 = model_transform_plan1.times(Mat4.rotation(this.rotation_angles[0], 0, 1, 0));
-        model_transform_plan1 = model_transform_plan1.times(Mat4.translation(orbit_distance, 0, 0));
-        this.shapes.sphere_plan1.draw(context, program_state, model_transform_plan1, this.materials.mat_plan1);
         
-        this.planet_1 = model_transform_plan1;
-
-        /* Planet 2 */
-        let model_transform_plan2 = Mat4.identity();
-        model_transform_plan2 = model_transform_plan2.times(Mat4.rotation(this.rotation_angles[1], 0, 1, 0));
-        orbit_distance += 3;
-        model_transform_plan2 = model_transform_plan2.times(Mat4.translation(orbit_distance, 0, 0));
-
-        // Draw Planet 2 with gouraud or phong depending on the time.
-        if (Math.floor(t) % 2 == 0) {
-            this.shapes.sphere_plan2.draw(context, program_state, model_transform_plan2, this.materials.mat_plan2_phong);
-        }
-        else {
-            this.shapes.sphere_plan2.draw(context, program_state, model_transform_plan2, this.materials.mat_plan2_gouraud);
-        }
-
-        this.planet_2 = model_transform_plan2;
-
-        /* Planet 3 */
-        let model_transform_plan3 = Mat4.identity();
-
-        model_transform_plan3 = model_transform_plan3.times(Mat4.rotation(this.rotation_angles[2], 0, 1, 0));
-        orbit_distance += 3;
-        model_transform_plan3 = model_transform_plan3.times(Mat4.translation(orbit_distance, 0, 0));
-
-        this.planet_3 = model_transform_plan3;
-
-        // Apply wobble to planet 3
-        model_transform_plan3 = model_transform_plan3.times(Mat4.rotation(this.wobble_angle, 1, 1, 0));
-
-        this.shapes.sphere_plan3.draw(context, program_state, model_transform_plan3, this.materials.mat_plan3);
-
-        // Scale ring to fit around planet & slim ring
-        model_transform_plan3 = model_transform_plan3.times(Mat4.scale(2, 2, 0.2));
-
-        this.shapes.torus_plan3.draw(context, program_state, model_transform_plan3, this.materials.mat_plan3);
-
-        /* Planet 4 */
-        let model_transform_plan4 = Mat4.identity();
-
-        model_transform_plan4 = model_transform_plan4.times(Mat4.rotation(this.rotation_angles[3], 0, 1, 0));
-        orbit_distance += 3;
-        model_transform_plan4 = model_transform_plan4.times(Mat4.translation(orbit_distance, 0, 0));
-
-        this.shapes.sphere_plan4.draw(context, program_state, model_transform_plan4, this.materials.mat_plan4);
-
-        this.planet_4 = model_transform_plan4;
-
-        // move transform to place moon
-        model_transform_plan4 = model_transform_plan4.times(Mat4.rotation(this.rotation_angles[4], 0, 1, 0));
-        model_transform_plan4 = model_transform_plan4.times(Mat4.translation(1.75, 0, 0));
-
-        this.moon = model_transform_plan4;
-
-        model_transform_plan4 = model_transform_plan4.times(Mat4.scale(0.5, 0.5, 0.5)); // Scale down slightly to look better.
-        this.shapes.sphere_plan4_moon.draw(context, program_state, model_transform_plan4, this.materials.mat_plan1);
-        
-        // Change camera focus onto item of interest
-        if (this.attached != undefined) {
-            var target = this.attached;
-            target = this.attached().times(Mat4.translation(0, 0, 5));
-
-            if (this.attached() !== this.initial_camera_location) {
-                //target = this.attached().times(Mat4.translation(0, 0, 5));
-                target = Mat4.inverse(target);
-            }
-
-            //program_state.set_camera(target);
-            target = target.map( (x,i) => Vector.from( program_state.camera_inverse[i] ).mix( x, 0.1 ) );
-            program_state.set_camera(target);
-        }
 
     }
 }
