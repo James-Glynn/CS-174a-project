@@ -122,23 +122,22 @@ export class Project extends Scene {
 
 
 
-        console.log(program_state.camera_transform);
+        //console.log(program_state.camera_transform);
         let character_position = vec3(program_state.camera_transform[0][3], 2, program_state.camera_transform[2][3]);
-        console.log(character_position);
+        //console.log(character_position);
         
         let new_at = character_position.plus(vec3(0, -0.25, 10));
 
         
-        console.log("new at: " + new_at);
+        //console.log("new at: " + new_at);
         let new_cam_transform = Mat4.look_at(character_position, new_at, vec3(0, 1, 0));
         program_state.set_camera(new_cam_transform);
 
         // New: object
         let model_transform_object = Mat4.identity();
-        model_transform_object = new_cam_transform.times(Mat4.translation(0, 0, -6));
+        model_transform_object = model_transform_object.times(Mat4.translation(program_state.camera_transform[0][3], 0, program_state.camera_transform[2][3]))
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 15));
         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
-        
-
     }
 }
 
