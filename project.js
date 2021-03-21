@@ -41,6 +41,7 @@ export class Project extends Scene {
         }
         this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
         this.initial_camera_location = Mat4.look_at(vec3(0, 5.5, -2), vec3(0, 5.5, -3), vec3(0, 1, 0));
+        this.model_transform_object = Mat4.identity();
         
         //height of player
         this.height = 6;
@@ -51,15 +52,6 @@ export class Project extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("View solar system", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
-        this.new_line();
-        this.key_triggered_button("Attach to planet 1", ["Control", "1"], () => this.attached = () => this.planet_1);
-        this.key_triggered_button("Attach to planet 2", ["Control", "2"], () => this.attached = () => this.planet_2);
-        this.new_line();
-        this.key_triggered_button("Attach to planet 3", ["Control", "3"], () => this.attached = () => this.planet_3);
-        this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
-        this.new_line();
-        this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
         this.key_triggered_button("Rotate right", ["e"], () => this.right_turn = true, true, () => this.right_turn = false);
         this.key_triggered_button("Rotate left", ["q"], () => this.left_turn = true, true, () => this.left_turn = false);
         this.new_line();
@@ -126,21 +118,20 @@ export class Project extends Scene {
 //         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
 
 
-
-        let character_position = vec3(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3]);
+        //let character_position = vec3(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3]);
         
 
 
-        let temp_camera = program_state.camera_transform;
+        //let temp_camera = program_state.camera_transform;
         
 
-        let model_transform_object = program_state.camera_transform;
-        //model_transform_object = model_transform_object.times(Mat4.translation(program_state.camera_transform[0][3], 0, program_state.camera_transform[2][3]))
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
-                                                       .times(Mat4.scale(1, 4, 1))
-                                                       .times(Mat4.translation(0, 0, 4));
+//         let model_transform_object = program_state.camera_transform;
+//         //model_transform_object = model_transform_object.times(Mat4.translation(program_state.camera_transform[0][3], 0, program_state.camera_transform[2][3]))
+//         model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
+//                                                        .times(Mat4.scale(1, 4, 1))
+//                                                        .times(Mat4.translation(0, 0, 4));
                                                        
-        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
+        this.shapes.box.draw(context, program_state, this.model_transform_object, this.materials.test2);
         
     }
 }
