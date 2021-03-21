@@ -20,6 +20,8 @@ export class Project extends Scene {
             plane: new defs.Square(),
             circle: new defs.Regular_2D_Polygon(1, 15),
             new_tree: new Shape_From_File("assets/new_tree.obj"),
+            leaves: new Shape_From_File("assets/leaves.obj"),
+            leaves2: new Shape_From_File("assets/leaves2.obj"),
             // TODO:  Fill in as many additional shape instances as needed in this key/value table.
             //        (Requirement 1)
         };
@@ -42,6 +44,7 @@ export class Project extends Scene {
                 texture: new Texture("assets/grass.jpg")
             }),
             tree_trunk: new Material(new defs.Phong_Shader(), {color: hex_color("#d2691e"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
+            leaves_text: new Material(new defs.Phong_Shader(), {color: hex_color("#336600"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
                
         }
         this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
@@ -49,6 +52,7 @@ export class Project extends Scene {
         
         //height of player
         this.height = 1;
+
 
         // chunk vars
         this.chunk_size = 10;
@@ -72,6 +76,11 @@ export class Project extends Scene {
         let dist = 0;
         dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(z2 - z1, 2));
         return dist;
+    }
+
+    //pass in either model_transform_chunk or temp_transform
+    populate(player_transform, context, program_state, biome_num, chunk_size){
+        
     }
 
     display(context, program_state) {
@@ -145,12 +154,37 @@ export class Project extends Scene {
             .times(Mat4.translation(character_position[0] / this.sky_shape_x, 0, character_position[2] / this.sky_shape_z));
         this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
         
+        let biome_num = 0;
+        //this.populate(model_transform_chunk, context, program_state, this.chunk_size);
+
+
         let model_transform_object = Mat4.identity();
         model_transform_object = model_transform_object.times(Mat4.translation(0, 1.7, -10));
         this.shapes.tree_stump.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
+        
+        let model_transform_leaves2 = Mat4.identity();
+        model_transform_leaves2 = model_transform_leaves2.times(Mat4.translation(.1, 2.3, -10))
+                                                         .times(Mat4.scale(1.1, 1.1, 1.1));
+        this.shapes.leaves2.draw(context, program_state, model_transform_leaves2, this.materials.leaves_text);
+
+
+        model_transform_object = Mat4.identity();
+        model_transform_object = model_transform_object.times(Mat4.translation(7, 1.7, -15));
+        this.shapes.tree_stump.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
+
+
+        model_transform_leaves2 = Mat4.identity();
+        model_transform_leaves2 = model_transform_leaves2.times(Mat4.translation(7.1, 2.3, -15))
+                                                         .times(Mat4.scale(1.1, 1.1, 1.1));
+        this.shapes.leaves2.draw(context, program_state, model_transform_leaves2, this.materials.leaves_text);
         let model_transform_new_tree = Mat4.identity();
         model_transform_new_tree = model_transform_new_tree.times(Mat4.translation(-5, 1.7, -10));
         this.shapes.new_tree.draw(context, program_state, model_transform_new_tree, this.materials.tree_trunk.override({color: hex_color("#1b0000")}));
+        let model_transform_new_leaves = Mat4.identity();
+        model_transform_new_leaves = model_transform_new_leaves.times(Mat4.translation(-5, 2.1, -10))
+                                                               .times(Mat4.scale(1.5, 1.6, 1.5));
+        this.shapes.leaves.draw(context, program_state, model_transform_new_leaves, this.materials.leaves_text);
+
         
         // TODO: fix character.
 //         let model_transform_box = program_state.camera_transform;
