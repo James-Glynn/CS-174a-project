@@ -66,8 +66,13 @@ export class Project extends Scene {
         
         // Biome vars
         this.biome_memory = [];
-        this.biome_textures = [
-            {name : "grassland", 
+        // Eugene: For each of the 3 biome types below in biome_textures,
+        // please edit the material to be unique of the tree and leaf 
+        // materials. If you have time, please also edit the material
+        // for the ground of each biome. Feel free to import additional
+        // textures into the project (like instead of grass, sand, etc).
+        this.biome_textures = {
+            grassland : {
                 ground : new Material(new Textured_Phong(), {
                     color: hex_color("#000000"),
                     ambient: .5, diffusivity: 0.5, specularity: 0.4,
@@ -77,18 +82,13 @@ export class Project extends Scene {
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
-                    }),
-                sun : new Material(new Textured_Phong(), {
+                    }),                
+                tree : new Material(new Textured_Phong(), { // Eugene: like here on this line
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
                     }),
-                tree : new Material(new Textured_Phong(), {
-                    color: hex_color("#999999"),
-                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
-                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
-                    }),
-                rock : new Material(new Textured_Phong(), {
+                leaf : new Material(new Textured_Phong(), { // Eugene: like here on this line
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
@@ -99,7 +99,7 @@ export class Project extends Scene {
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
                     }),
             },
-            {name : "desert",
+            desert : {
                 ground : new Material(new Textured_Phong(), {
                     color: hex_color("#000000"),
                     ambient: .5, diffusivity: 0.5, specularity: 0.4,
@@ -109,18 +109,13 @@ export class Project extends Scene {
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
-                    }),
-                sun : new Material(new Textured_Phong(), {
+                    }),                
+                tree : new Material(new Textured_Phong(), { // Eugene: like here on this line
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
                     }),
-                tree : new Material(new Textured_Phong(), {
-                    color: hex_color("#999999"),
-                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
-                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
-                    }),
-                rock : new Material(new Textured_Phong(), {
+                leaf : new Material(new Textured_Phong(), { // Eugene: like here on this line
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
@@ -130,9 +125,8 @@ export class Project extends Scene {
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
                     }),
-
             },
-            {name : "rockland",
+            badland : {
                 ground : new Material(new Textured_Phong(), {
                     color: hex_color("#000000"),
                     ambient: .5, diffusivity: 0.5, specularity: 0.4,
@@ -142,18 +136,13 @@ export class Project extends Scene {
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
-                    }),
-                sun : new Material(new Textured_Phong(), {
+                    }),                
+                tree : new Material(new Textured_Phong(), { // Eugene: like here on this line
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
                     }),
-                tree : new Material(new Textured_Phong(), {
-                    color: hex_color("#999999"),
-                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
-                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
-                    }),
-                rock : new Material(new Textured_Phong(), {
+                leaf : new Material(new Textured_Phong(), { // Eugene: like here on this line
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
@@ -164,8 +153,28 @@ export class Project extends Scene {
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
                     }),
             },
+        };
+        this.biome_names = [this.biome_textures.grassland,
+                            this.biome_textures.desert,
+                            this.biome_textures.badland,];
+        this.num_biomes = this.biome_names.length;
+        this.biome_trees = [
+            {
+                tree : this.shapes.tree_stump,
+                tree_offset : vec3(0, 1.7, 0),
+                leaf : this.shapes.leaves2,
+                leaf_scale : vec3(1.1, 1.1, 1.1),
+                leaf_offset : vec3(0.1, 0.6, 0),
+            },
+            {
+                tree : this.shapes.new_tree,
+                tree_offset : vec3(0, 1.7, 0),
+                leaf : this.shapes.leaves,
+                leaf_scale : vec3(1.5, 1.6, 1.5),
+                leaf_offset : vec3(0, 0.4, 0),
+            },
         ];
-        this.num_biomes = this.biome_textures.length;
+        this.num_trees = 2;
            
 
         // Camera vars
@@ -209,22 +218,23 @@ export class Project extends Scene {
 
 //======Biomes TODO: everything
         let character_position = vec3(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3]);
-
+        
+        /* equivalent to the player's distance from the origin (measured in chunks).
+         * This can be thought of as a "ring" around the center that all chunks 
+         * in that ring share. This var is used to calculate unique textures/ 
+         * obj spawn positions in each chunk. */
         let curr_biome = Math.floor(character_position.norm() / this.chunk_size); // TODO: test 4 correctness.
-        //let num_biomes = 0;
-        //console.log(biome_num);
+        
+        /* If we haven't visited this biome "ring" before: */
         if ( !(curr_biome in this.biome_memory) ) {
             // used to choose textures randomly
             var chosen_biome = Math.floor(Math.random() * (this.num_biomes));
             
             // save the chosen texture into the texture_memory dict
-            this.biome_memory.push({num : curr_biome, type : this.biome_textures[chosen_biome]});
+            this.biome_memory.push({num : curr_biome, type : this.biome_names[chosen_biome]});
             //num_biomes = Object.keys(this.biome_memory).length;
         }
-        // TODO: else
 
-        
-        
 
 //======Ground Chunks TODO: rename section?
         /* Vector representing the distance to the origin, as measured in 
@@ -262,12 +272,18 @@ export class Project extends Scene {
                 let temp_transform = model_transform_chunk
                             .times(Mat4.translation(offset_x + i + 0.5, offset_y + j + 0.5, 0));
                 
+                /* we want to change the curr_biome to reflect the chunk's 
+                 * i & j values before calling draw_biome(). If we don't, 
+                 * all 9 chunks will change to the new biome type at the 
+                 * same time, which is gross. */
+                 // TODO: this isn't right.
+//                  if ( curr_biome > this.num_chunks_x ) {
+//                      curr_biome = curr_biome + offset_x + i;
+//                  }
                 // TODO: customize ground plane given chosen biome.
                 this.draw_biome(context, program_state, temp_transform, curr_biome);
-                //this.shapes.plane.draw(context, program_state, temp_transform, this.materials.grass);
             }            
         }
-
 
         
 //======Skybox TODO: customize skybox given chosen biome.
@@ -319,10 +335,36 @@ export class Project extends Scene {
     
     // TODO: include offset so that all 9 chunks dont change at once.
     draw_biome(context, program_state, chunk_transform, biome) {
+        // Eugene: this gets passed into draw_tree. Use this to 
+        // choose bark and leaf texture.
         var chosen_biome = this.biome_memory[biome].type;
-        //console.log(chosen_biome.name)
+        let chunk_center = chunk_transform.times( vec4( 0,0,0,1 ) ).to3();
+
+        // choose tree/ leaf combo
+        // Eugene: Right now we choose which type of tree to draw at random
+        // every frame. We need to somehow store which type of tree was chosen.
+        var tree_num = Math.floor(Math.random() * (this.num_trees));
+        var tree_combo = this.biome_trees[tree_num];
+
+        // TODO: Decide to draw tree
+
+        this.draw_tree(context, program_state, tree_combo, chunk_center, chosen_biome);
         this.shapes.plane.draw(context, program_state, chunk_transform, chosen_biome.ground);
     }// end draw_biome
+
+    draw_tree(context, program_state, tree_choice, center_vec, chosen_biome) {
+        // Draw tree
+        var tree_transform = Mat4.identity().times(Mat4.translation(center_vec[0], center_vec[1], center_vec[2]));
+        tree_transform = tree_transform
+            .times(Mat4.translation(tree_choice.tree_offset[0], tree_choice.tree_offset[1], tree_choice.tree_offset[2]));
+        tree_choice.tree.draw(context, program_state, tree_transform, chosen_biome.tree);
+        
+        // Draw leaves
+        let model_transform_leaves2 = tree_transform
+            .times(Mat4.translation(tree_choice.leaf_offset[0], tree_choice.leaf_offset[1], tree_choice.leaf_offset[2]))
+            .times(Mat4.scale(tree_choice.leaf_scale[0], tree_choice.leaf_scale[1], tree_choice.leaf_scale[2]));        
+        tree_choice.leaf.draw(context, program_state, model_transform_leaves2, chosen_biome.leaf);
+    }
 } // end project class
 
 class Gouraud_Shader extends Shader {
