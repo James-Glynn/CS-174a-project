@@ -44,12 +44,18 @@ export class Project extends Scene {
         
         //height of player
         this.height = 1;
-        this.right_turn = false;
-        this.left_turn = false;
-        this.map_size = 100;
-        this.wall_height = 2;
 
-        this.initial_camera_location = Mat4.look_at(vec3(0, this.height, -2), vec3(0, this.height, -3), vec3(0, 1, 0));
+        // chunk vars
+        this.chunk_size = 10;
+        this.num_chunks_x = 3;
+        this.num_chunks_y = 3;
+
+        // Skybox vars
+        this.sky_shape_x = this.chunk_size * this.num_chunks_x;
+        this.sky_shape_y = this.chunk_size * this.num_chunks_y;
+        this.sky_shape_z = 100;
+
+        this.initial_camera_location = Mat4.look_at(vec3(0, this.height, 0), vec3(0, this.height, -3), vec3(0, 1, 0));
 
     }
 
@@ -64,10 +70,7 @@ export class Project extends Scene {
         this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
         this.new_line();
         this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
-        this.key_triggered_button("Rotate right", ["e"], () => this.right_turn = true, true, () => this.right_turn = false);
-        this.key_triggered_button("Rotate left", ["q"], () => this.left_turn = true, true, () => this.left_turn = false);
         this.new_line();
-        //this.key_triggered_button( "Left",   [ "a" ], () => this.thrust[0] =  1, undefined, () => this.thrust[0] = 0 );
     }
 
     loc_using_implicit_line(x_0, x_1, x_2, z_0, z_1, z_2, cube_x, cube_z, player_x, player_z){
@@ -103,128 +106,74 @@ export class Project extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
-        // TODO: Do we want both lights?
+        // TODO: Adjust lighting
         const light_position = vec4(0, 5, 5, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
         program_state.lights = [];
 
-
-        // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         
-        // NEW: Skybox
-        let model_transform_sky = Mat4.identity();
-        model_transform_sky = model_transform_sky.times(Mat4.scale(this.map_size / 2.75, this.map_size / 2.75, this.map_size / 2.75));
-        this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
-
-        // New: Ground
-        let model_transform_ground = Mat4.identity();
-        model_transform_ground = model_transform_ground.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
-        model_transform_ground = model_transform_ground.times(Mat4.translation(0, 0, 1));
-        model_transform_ground = model_transform_ground.times(Mat4.scale(this.map_size / 4, this.map_size / 4, this.map_size / 4));
-        this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.grass);
-
-                // New: object
-        let model_transform_wall = Mat4.identity();
-        model_transform_wall = model_transform_wall.times(Mat4.translation(0, 0, 0))
-                                    .times(Mat4.scale(3, 5, 3))
-                                    .times(Mat4.translation(0, 0.5, -16));
-
-        this.shapes.box.draw(context, program_state, model_transform_wall, this.materials.test);
-
-
-
-
-
+//======Ground Chunks TODO: rename section?
         let character_position = vec3(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3]);
-        
 
+        /* Vector representing the distance to the origin, as measured in 
+         * chunks. */
+        let chunks_2_org = vec3(Math.floor(character_position[0] / this.chunk_size),
+                                            Math.floor(character_position[1] / this.chunk_size),
+                                            Math.floor(character_position[2] / this.chunk_size));
+        /* Useful for determining the position of the player with respect to
+         * the current chunk */
+        let chunk_remainder_vec = vec3(character_position[0] % this.chunk_size,
+                                            character_position[1] % this.chunk_size,
+                                            character_position[2] % this.chunk_size);
 
-        let temp_camera = program_state.camera_transform;
+        /* Stores the matrix that encodes where to place the chunk beneath
+         * the player. We will perform operation on this matrix to decide
+         * where to place neighboring chunks in the loop below. */
+        let model_transform_chunk = Mat4.identity();
+        model_transform_chunk = model_transform_chunk.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
+        model_transform_chunk = model_transform_chunk.times(Mat4.scale(this.chunk_size, this.chunk_size, this.chunk_size));        
+        model_transform_chunk = model_transform_chunk
+            .times(Mat4.translation(Math.floor(chunks_2_org[0]), Math.floor(chunks_2_org[2]), 0));
+                            // We are translating on the xy-plane, because the ground
+                            // chunks were already rotated once across the
+                            // x-axis. Due to this rotation, the above statement
+                            // actually translates with respect to the xz-plane.
         
-
-        let model_transform_object = program_state.camera_transform;
-        //model_transform_object = model_transform_object.times(Mat4.translation(program_state.camera_transform[0][3], 0, program_state.camera_transform[2][3]))
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
-                                                       .times(Mat4.scale(1, 4, 1))
-                                                       .times(Mat4.translation(0, -0.75, 4));
-                                                       
-        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
-        
-        // Draw walls
+        /* This for loop iteratively places num_chunks_x by num_chunks_y squared_scale
+         * under the player's current x,x-position. */
         var i;
         var j;
-        var map_maze = new Array(this.map_size);
-        for (i = 0; i < this.map_size; i++){
-            map_maze[i] = new Array(this.map_size);
-            for (j = 0; j < this.map_size; j++) {
-                if (i == 0 || i == (this.map_size - 1) || j == 0 || j == (this.map_size - 1)) {
-                    map_maze[i][j] = "X";
-                }
-                else {
-                    map_maze[i][j] = "O";
-                }
-                // TODO: define other parts of the mazer here
-            }
-
-        }
-        
-        // TODO: store cube coords
-        var wall_dict = [];
-       
-        for (i = 0; i < this.map_size; i++){
-            for (j = 0; j < this.map_size; j++) {
-                //if ( (i % 2 == 1) || (j % 2 == 1 ) ) { continue; }
-                let model_transform_wall = Mat4.identity();
-                model_transform_wall = model_transform_wall.times(Mat4.scale(0.5, 0.5, 0.5));
-
-                let offset = this.map_size / 2;
-
-                model_transform_wall = model_transform_wall.times(Mat4.translation(offset - i, -1, offset - j));
-
-                if (map_maze[i][j] == "X") {
-                    // save box coords
-                    let box_center_3 = model_transform_wall.times( vec4( 0,0,0,1 ) ).to3();
-                    let box_center = (box_center_3[0], box_center_3[1]);
-                    console.log(box_center_3)
-                    let box_LL = (box_center_3[0] - 0.5, box_center_3[1] - 0.5);
-                    let box_LR = (box_center_3[0] - 0.5, box_center_3[1] + 0.5);
-                    let box_UL = (box_center_3[0] + 0.5, box_center_3[1] - 0.5);
-                    let box_UR = (box_center_3[0] + 0.5, box_center_3[1] + 0.5);
-
-                    wall_dict.push({center : box_center, LL : box_LL, LR : box_LR, UL : box_UL, UR : box_UR});
-
-
-                    var wh;  
-                    for ( wh = 0; wh < this.wall_height; wh++) {
-
-                        this.shapes.box.draw(context, program_state, model_transform_wall, this.materials.test);
-                        model_transform_wall = model_transform_wall.times(Mat4.translation(0, 1, 0));
-                        this.shapes.box.draw(context, program_state, model_transform_wall, this.materials.test);
-                    }                    
-                }
-            }
+        let offset_x = -1 * Math.floor(this.num_chunks_x);
+        let offset_y = -1 * Math.floor(this.num_chunks_y);
+        for (i = 0; i < this.num_chunks_x; i++) {
+            for (j = 0; j < this.num_chunks_y; j++) {
+                // I think we are dividing the offsets by 4 because the cubes are 2 by 2 and its a scaled plane.
+                let temp_transform = model_transform_chunk
+                            .times(Mat4.translation(offset_x / 4 + i, offset_y / 4 + j , 0));
+                
+                // TODO: customize ground plane given chosen biome.
+                this.shapes.plane.draw(context, program_state, temp_transform, this.materials.grass);
+            }            
         }
 
-        //console.log(wall_dict);
         
+//======Skybox TODO: customize skybox given chosen biome.
+        let model_transform_sky = Mat4.identity();
+        model_transform_sky = model_transform_sky.times(Mat4.scale(this.sky_shape_x, this.sky_shape_y, this.sky_shape_z));
+        model_transform_sky = model_transform_sky
+            .times(Mat4.translation(character_position[0] / this.sky_shape_x, 0, character_position[2] / this.sky_shape_z));
+        this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
 
-
-        // TODO: Collision
-        let cirlce_collider_center = vec4(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3], 1);
-        let cirlce_collider_rad = 1;
+        // TODO: fix character.
+        let model_transform_object = program_state.camera_transform;
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
+                                                       .times(Mat4.scale(1, 4, 1))
+                                                       .times(Mat4.translation(0, -0.75, 4));                                                       
+        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
         
-
-        
-
-
-
-
-
-
-        
-    }
-}
+    } // end display()
+} // end project class
 
 class Gouraud_Shader extends Shader {
     // This is a Shader using Phong_Shader as template
@@ -422,3 +371,67 @@ class Ring_Shader extends Shader {
 }
 
 
+// TODO: Leftover Collison code
+
+// Draw walls
+//         var i;
+//         var j;
+//         var map_maze = new Array(this.map_size);
+//         for (i = 0; i < this.map_size; i++){
+//             map_maze[i] = new Array(this.map_size);
+//             for (j = 0; j < this.map_size; j++) {
+//                 if (i == 0 || i == (this.map_size - 1) || j == 0 || j == (this.map_size - 1)) {
+//                     map_maze[i][j] = "X";
+//                 }
+//                 else {
+//                     map_maze[i][j] = "O";
+//                 }
+//                 // TODO: define other parts of the mazer here
+//             }
+
+//         }
+        
+//         // TODO: store cube coords
+//         var wall_dict = [];
+       
+//         for (i = 0; i < this.map_size; i++){
+//             for (j = 0; j < this.map_size; j++) {
+//                 //if ( (i % 2 == 1) || (j % 2 == 1 ) ) { continue; }
+//                 let model_transform_wall = Mat4.identity();
+//                 model_transform_wall = model_transform_wall.times(Mat4.scale(0.5, 0.5, 0.5));
+
+//                 let offset = this.map_size / 2;
+
+//                 model_transform_wall = model_transform_wall.times(Mat4.translation(offset - i, -1, offset - j));
+
+//                 if (map_maze[i][j] == "X") {
+//                     // save box coords
+//                     let box_center_3 = model_transform_wall.times( vec4( 0,0,0,1 ) ).to3();
+//                     let box_center = (box_center_3[0], box_center_3[1]);
+//                     console.log(box_center_3)
+//                     let box_LL = (box_center_3[0] - 0.5, box_center_3[1] - 0.5);
+//                     let box_LR = (box_center_3[0] - 0.5, box_center_3[1] + 0.5);
+//                     let box_UL = (box_center_3[0] + 0.5, box_center_3[1] - 0.5);
+//                     let box_UR = (box_center_3[0] + 0.5, box_center_3[1] + 0.5);
+
+//                     wall_dict.push({center : box_center, LL : box_LL, LR : box_LR, UL : box_UL, UR : box_UR});
+
+
+//                     var wh;  
+//                     for ( wh = 0; wh < this.wall_height; wh++) {
+
+//                         this.shapes.box.draw(context, program_state, model_transform_wall, this.materials.test);
+//                         model_transform_wall = model_transform_wall.times(Mat4.translation(0, 1, 0));
+//                         this.shapes.box.draw(context, program_state, model_transform_wall, this.materials.test);
+//                     }                    
+//                 }
+//             }
+//         }
+
+//         //console.log(wall_dict);
+        
+
+
+//         // TODO: Collision
+//         let cirlce_collider_center = vec4(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3], 1);
+//         let cirlce_collider_rad = 1;
