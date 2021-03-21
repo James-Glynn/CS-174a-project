@@ -16,17 +16,18 @@ export class Project extends Scene {
         this.shapes = {
             box: new defs.Cube(),
             sky_sphere: new defs.Subdivision_Sphere(4),
-            tree:  new Shape_From_File("assets/final_tree.obj"),
+            tree_stump:  new Shape_From_File("assets/naked_tree.obj"),
             plane: new defs.Square(),
             circle: new defs.Regular_2D_Polygon(1, 15),
+            new_tree: new Shape_From_File("assets/new_tree.obj"),
             // TODO:  Fill in as many additional shape instances as needed in this key/value table.
             //        (Requirement 1)
         };
 
         // *** Materials
         this.materials = {
-            test: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+            test: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: .4, diffusivity: .6}),
             test2: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#992828")}),
             ring: new Material(new Ring_Shader()),
@@ -40,7 +41,7 @@ export class Project extends Scene {
                 ambient: .5, diffusivity: 0.5, specularity: 0.4,
                 texture: new Texture("assets/grass.jpg")
             }),
-            tree_trunk: new Material(new defs.Phong_Shader(), {ambient: .9, diffusivity: 0.5, specularity: 0.9}),
+            tree_trunk: new Material(new defs.Phong_Shader(), {color: hex_color("#d2691e"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
                
         }
         this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
@@ -87,7 +88,7 @@ export class Project extends Scene {
         // TODO: Adjust lighting
         const light_position = vec4(0, 5, 5, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
-        program_state.lights = [];
+        //program_state.lights = [];
 
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         
@@ -145,14 +146,18 @@ export class Project extends Scene {
         this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
         
         let model_transform_object = Mat4.identity();
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 2.6, -10));
-        this.shapes.tree.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 1.7, -10));
+        this.shapes.tree_stump.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
+        let model_transform_new_tree = Mat4.identity();
+        model_transform_new_tree = model_transform_new_tree.times(Mat4.translation(-5, 1.7, -10));
+        this.shapes.new_tree.draw(context, program_state, model_transform_new_tree, this.materials.tree_trunk.override({color: hex_color("#1b0000")}));
+        
         // TODO: fix character.
-//         let model_transform_object = program_state.camera_transform;
-//         model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
+//         let model_transform_box = program_state.camera_transform;
+//         model_transform_box = model_transform_box.times(Mat4.translation(0, 0, -17))
 //                                                        .times(Mat4.scale(1, 4, 1))
 //                                                        .times(Mat4.translation(0, -0.75, 4));                                                       
-//         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
+//         this.shapes.box.draw(context, program_state, model_transform_box, this.materials.test2);
     } // end display()
 } // end project class
 
