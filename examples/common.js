@@ -792,8 +792,8 @@ class Movement_Controls extends Scene
       this.key_triggered_button( "+",  [ "p" ], () => 
                                             this.speed_multiplier  *=  1.2, "green", undefined, undefined, speed_controls );
       this.new_line();
-      this.key_triggered_button( "Roll left",  [ "," ], () => this.roll =  1, undefined, () => this.roll = 0 );
-      this.key_triggered_button( "Roll right", [ "." ], () => this.roll = -1, undefined, () => this.roll = 0 );
+      this.key_triggered_button( "Roll left",  [ "," ], () => this.roll =  .25, undefined, () => this.roll = 0 );
+      this.key_triggered_button( "Roll right", [ "." ], () => this.roll = -.25, undefined, () => this.roll = 0 );
       this.new_line();
       // Keiran: Commented out for custom control
       //this.key_triggered_button( "(Un)freeze mouse look around", [ "f" ], () => this.look_around_locked ^=  1, "green" );
@@ -851,9 +851,10 @@ class Movement_Controls extends Scene
           this.matrix().post_multiply( Mat4.rotation( -velocity,   i, 1-i, 0 ) );
           this.inverse().pre_multiply( Mat4.rotation( +velocity,   i, 1-i, 0 ) );
         }
-      this.matrix().post_multiply( Mat4.rotation( +.025 * this.roll,   0,1,0 ) );
-      this.inverse().pre_multiply( Mat4.rotation( -.025 * this.roll,   0,1,0 ) );
+      this.matrix().post_multiply( Mat4.rotation( +1 * this.roll,   0,1,0 ) );
+      this.inverse().pre_multiply( Mat4.rotation( -1 * this.roll,   0,1,0 ) );
                                     // Now apply translation movement of the camera, in the newest local coordinate frame.
+      // Keiran: 
       this.matrix().post_multiply( Mat4.translation( ...this.thrust.times( -meters_per_frame ) ) );
       this.inverse().pre_multiply( Mat4.translation( ...this.thrust.times( +meters_per_frame ) ) );
     }

@@ -40,12 +40,16 @@ export class Project extends Scene {
             }),
         }
         this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
-        this.initial_camera_location = Mat4.look_at(vec3(0, 5.5, -2), vec3(0, 5.5, -3), vec3(0, 1, 0));
+        
         
         //height of player
-        this.height = 6;
+        this.height = 1;
         this.right_turn = false;
         this.left_turn = false;
+        this.map_size = 100;
+        this.wall_height = 2;
+
+        this.initial_camera_location = Mat4.look_at(vec3(0, this.height, -2), vec3(0, this.height, -3), vec3(0, 1, 0));
 
     }
 
@@ -89,20 +93,25 @@ export class Project extends Scene {
         
         // NEW: Skybox
         let model_transform_sky = Mat4.identity();
-        model_transform_sky = model_transform_sky.times(Mat4.scale(400, 400, 400));
+        model_transform_sky = model_transform_sky.times(Mat4.scale(this.map_size / 2.75, this.map_size / 2.75, this.map_size / 2.75));
         this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
 
         // New: Ground
         let model_transform_ground = Mat4.identity();
         model_transform_ground = model_transform_ground.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
         model_transform_ground = model_transform_ground.times(Mat4.translation(0, 0, 1));
-        model_transform_ground = model_transform_ground.times(Mat4.scale(400, 400, 400));
+        model_transform_ground = model_transform_ground.times(Mat4.scale(this.map_size / 4, this.map_size / 4, this.map_size / 4));
         this.shapes.plane.draw(context, program_state, model_transform_ground, this.materials.grass);
 
-//         // New: object
-//         let model_transform_object = Mat4.identity();
-//         model_transform_object = model_transform_object.times(Mat4.translation(0, 0, 0));
-//         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
+                // New: object
+        let model_transform_wall = Mat4.identity();
+        model_transform_wall = model_transform_wall.times(Mat4.translation(0, 0, 0))
+                                    .times(Mat4.scale(3, 5, 3))
+                                    .times(Mat4.translation(0, 0.5, -16));
+
+        this.shapes.box.draw(context, program_state, model_transform_wall, this.materials.test);
+
+
 
 
 
@@ -116,9 +125,82 @@ export class Project extends Scene {
         let model_transform_object = program_state.camera_transform;
         //model_transform_object = model_transform_object.times(Mat4.translation(program_state.camera_transform[0][3], 0, program_state.camera_transform[2][3]))
         model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
-                                                       .times(Mat4.scale(1, 4, 1));
+                                                       .times(Mat4.scale(1, 4, 1))
+                                                       .times(Mat4.translation(0, -0.75, 4));
                                                        
         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
+        
+        // Draw walls
+        var i;
+        var j;
+        var map_maze = new Array(this.map_size);
+        for (i = 0; i < this.map_size; i++){
+            map_maze[i] = new Array(this.map_size);
+            for (j = 0; j < this.map_size; j++) {
+                if (i == 0 || i == (this.map_size - 1) || j == 0 || j == (this.map_size - 1)) {
+                    map_maze[i][j] = "X";
+                }
+                else {
+                    map_maze[i][j] = "O";
+                }
+                // TODO: define other parts of the mazer here
+            }
+
+        }
+        
+        // TODO: store cube coords
+        var wall_dict = [];
+       
+        for (i = 0; i < this.map_size; i++){
+            for (j = 0; j < this.map_size; j++) {
+                //if ( (i % 2 == 1) || (j % 2 == 1 ) ) { continue; }
+                let model_transform_wall = Mat4.identity();
+                model_transform_wall = model_transform_wall.times(Mat4.scale(0.5, 0.5, 0.5));
+
+                let offset = this.map_size / 2;
+
+                model_transform_wall = model_transform_wall.times(Mat4.translation(offset - i, -1, offset - j));
+
+                if (map_maze[i][j] == "X") {
+                    // save box coords
+                    let box_center_3 = model_transform_wall.times( vec4( 0,0,0,1 ) ).to3();
+                    let box_center = (box_center_3[0], box_center_3[1]);
+                    console.log(box_center_3)
+                    let box_LL = (box_center_3[0] - 0.5, box_center_3[1] - 0.5);
+                    let box_LR = (box_center_3[0] - 0.5, box_center_3[1] + 0.5);
+                    let box_UL = (box_center_3[0] + 0.5, box_center_3[1] - 0.5);
+                    let box_UR = (box_center_3[0] + 0.5, box_center_3[1] + 0.5);
+
+                    wall_dict.push({center : box_center, LL : box_LL, LR : box_LR, UL : box_UL, UR : box_UR});
+
+
+                    var wh;  
+                    for ( wh = 0; wh < this.wall_height; wh++) {
+
+                        this.shapes.box.draw(context, program_state, model_transform_wall, this.materials.test);
+                        model_transform_wall = model_transform_wall.times(Mat4.translation(0, 1, 0));
+                        this.shapes.box.draw(context, program_state, model_transform_wall, this.materials.test);
+                    }                    
+                }
+            }
+        }
+
+        //console.log(wall_dict);
+        
+
+
+        // TODO: Collision
+        let cirlce_collider_center = vec4(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3], 1);
+        let cirlce_collider_rad = 1;
+        
+
+        
+
+
+
+
+
+
         
     }
 }
