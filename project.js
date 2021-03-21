@@ -70,6 +70,27 @@ export class Project extends Scene {
         //this.key_triggered_button( "Left",   [ "a" ], () => this.thrust[0] =  1, undefined, () => this.thrust[0] = 0 );
     }
 
+    loc_using_implicit_line(x_0, x_1, x_2, z_0, z_1, z_2, cube_x, cube_z, player_x, player_z){
+        let loc = 0;
+        //(2's are away from the line while 1 is on the line)
+        let dz = 0;
+        let dx = 0; 
+        let loc_cube = 0;
+        let loc_player = 0;
+        dz = z_1 - z_0;
+        dx = x_1 - x_0;
+        loc_cube = (cube_x - x_1)*dz - (cube_z - z_1)*dx;
+        loc_player = (player_x - x_1)*dz - (player_z - z_1)*dx;
+        //now we know the location of the cube relative to the implicit line
+        //now we use the player's coordinates to determine if they are inside or outside the cube
+        if(Math.sign(loc_cube) == Math.sign(loc_player)){
+            //player is inside the cube
+        }
+        else{
+            //player is not inside the cube
+        }
+    }
+
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
@@ -399,4 +420,5 @@ class Ring_Shader extends Shader {
         }`;
     }
 }
+
 
