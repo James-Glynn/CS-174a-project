@@ -738,7 +738,7 @@ class Movement_Controls extends Scene
     { super();
       const data_members = { roll: 0, look_around_locked: true, 
                              thrust: vec3( 0,0,0 ), pos: vec3( 0,0,0 ), z_axis: vec3( 0,0,0 ),
-                             radians_per_frame: 1/200, meters_per_frame: 20, speed_multiplier: 1 };
+                             radians_per_frame: 1/200, meters_per_frame: 10, speed_multiplier: 1 };
       Object.assign( this, data_members );
 
       this.mouse_enabled_canvases = new Set();
@@ -800,8 +800,8 @@ class Movement_Controls extends Scene
       this.key_triggered_button( "+",  [ "p" ], () => 
                                             this.speed_multiplier  *=  1.2, "green", undefined, undefined, speed_controls );
       this.new_line();
-      this.key_triggered_button( "Roll left",  [ "," ], () => this.roll =  .25, undefined, () => this.roll = 0 );
-      this.key_triggered_button( "Roll right", [ "." ], () => this.roll = -.25, undefined, () => this.roll = 0 );
+      this.key_triggered_button( "Roll left",  [ "," ], () => this.roll =  .01, undefined, () => this.roll = 0 );
+      this.key_triggered_button( "Roll right", [ "." ], () => this.roll = -.01, undefined, () => this.roll = 0 );
       this.new_line();
       // Keiran: Commented out for custom control
       //this.key_triggered_button( "(Un)freeze mouse look around", [ "f" ], () => this.look_around_locked ^=  1, "green" );

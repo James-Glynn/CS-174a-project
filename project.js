@@ -1,10 +1,11 @@
 import {defs, tiny} from './examples/common.js';
+import { Shape_From_File } from './examples/obj-file-demo.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Texture, Material, Scene, camera_transform
 } = tiny;
 
-const {Cube, Axis_Arrows, Textured_Phong} = defs
+const {Cube, Axis_Arrows, Textured_Phong, Fake_Bump_Map} = defs
 
 export class Project extends Scene {
     constructor() {
@@ -15,6 +16,7 @@ export class Project extends Scene {
         this.shapes = {
             box: new defs.Cube(),
             sky_sphere: new defs.Subdivision_Sphere(4),
+            tree:  new Shape_From_File("assets/final_tree.obj"),
             plane: new defs.Square(),
             circle: new defs.Regular_2D_Polygon(1, 15),
             // TODO:  Fill in as many additional shape instances as needed in this key/value table.
@@ -33,11 +35,13 @@ export class Project extends Scene {
                 ambient: .5, diffusivity: 0.1, specularity: 0.1,
                 texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
             }),
-            grass: new Material(new Textured_Phong(), {
+            grass: new Material(new Fake_Bump_Map(1), {
                 color: hex_color("#000000"),
                 ambient: .5, diffusivity: 0.5, specularity: 0.4,
-                texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR")
+                texture: new Texture("assets/grass.jpg")
             }),
+            tree_trunk: new Material(new defs.Phong_Shader(), {ambient: .9, diffusivity: 0.5, specularity: 0.9}),
+               
         }
         this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
 
@@ -52,8 +56,8 @@ export class Project extends Scene {
 
         // Skybox vars
         this.sky_shape_x = this.chunk_size * this.num_chunks_x;
-        this.sky_shape_y = this.chunk_size * this.num_chunks_y;
-        this.sky_shape_z = 100;
+        this.sky_shape_y = 100;
+        this.sky_shape_z = this.chunk_size * this.num_chunks_y;
 
         this.initial_camera_location = Mat4.look_at(vec3(0, this.height, 0), vec3(0, this.height, -3), vec3(0, 1, 0));
 
@@ -61,38 +65,12 @@ export class Project extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-
-        this.key_triggered_button("View solar system", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
-        this.new_line();
-        this.key_triggered_button("Attach to planet 1", ["Control", "1"], () => this.attached = () => this.planet_1);
-        this.key_triggered_button("Attach to planet 2", ["Control", "2"], () => this.attached = () => this.planet_2);
-        this.new_line();
-        this.key_triggered_button("Attach to planet 3", ["Control", "3"], () => this.attached = () => this.planet_3);
-        this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
-        this.new_line();
-        this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
-        this.new_line();
     }
 
-    loc_using_implicit_line(x_0, x_1, x_2, z_0, z_1, z_2, cube_x, cube_z, player_x, player_z){
-        let loc = 0;
-        //(2's are away from the line while 1 is on the line)
-        let dz = 0;
-        let dx = 0; 
-        let loc_cube = 0;
-        let loc_player = 0;
-        dz = z_1 - z_0;
-        dx = x_1 - x_0;
-        loc_cube = (cube_x - x_1)*dz - (cube_z - z_1)*dx;
-        loc_player = (player_x - x_1)*dz - (player_z - z_1)*dx;
-        //now we know the location of the cube relative to the implicit line
-        //now we use the player's coordinates to determine if they are inside or outside the cube
-        if(Math.sign(loc_cube) == Math.sign(loc_player)){
-            //player is inside the cube
-        }
-        else{
-            //player is not inside the cube
-        }
+    euclidean_dist(x2, x1, z2, z1) {
+        let dist = 0;
+        dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(z2 - z1, 2));
+        return dist;
     }
 
     display(context, program_state) {
@@ -103,7 +81,6 @@ export class Project extends Scene {
             // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(this.initial_camera_location);
         }
-
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
@@ -128,35 +105,37 @@ export class Project extends Scene {
         let chunk_remainder_vec = vec3(character_position[0] % this.chunk_size,
                                             character_position[1] % this.chunk_size,
                                             character_position[2] % this.chunk_size);
-
+        //console.log(Math.floor(chunks_2_org[2]));
         /* Stores the matrix that encodes where to place the chunk beneath
          * the player. We will perform operation on this matrix to decide
          * where to place neighboring chunks in the loop below. */
         let model_transform_chunk = Mat4.identity();
         model_transform_chunk = model_transform_chunk.times(Mat4.rotation( (Math.PI / 2), 1, 0, 0 ));
-        model_transform_chunk = model_transform_chunk.times(Mat4.scale(this.chunk_size, this.chunk_size, this.chunk_size));        
+        model_transform_chunk = model_transform_chunk.times(Mat4.scale(this.chunk_size, this.chunk_size, 0));        
         model_transform_chunk = model_transform_chunk
             .times(Mat4.translation(Math.floor(chunks_2_org[0]), Math.floor(chunks_2_org[2]), 0));
                             // We are translating on the xy-plane, because the ground
                             // chunks were already rotated once across the
                             // x-axis. Due to this rotation, the above statement
                             // actually translates with respect to the xz-plane.
-        
         /* This for loop iteratively places num_chunks_x by num_chunks_y squared_scale
          * under the player's current x,x-position. */
         var i;
         var j;
+        //console.log(model_transform_chunk.times( vec4( 0,0,0,1 ) ).to3());
         let offset_x = -1 * Math.floor(this.num_chunks_x);
         let offset_y = -1 * Math.floor(this.num_chunks_y);
+        //console.log(offset_x);
+        //console.log(offset_y);
         for (i = 0; i < this.num_chunks_x; i++) {
             for (j = 0; j < this.num_chunks_y; j++) {
                 // I think we are dividing the offsets by 4 because the cubes are 2 by 2 and its a scaled plane.
                 let temp_transform = model_transform_chunk
-                            .times(Mat4.translation(offset_x / 4 + i, offset_y / 4 + j , 0));
+                            .times(Mat4.translation(Math.floor(offset_x / 4) + i, Math.floor(offset_y / 4) + j, 0));
                 
                 // TODO: customize ground plane given chosen biome.
                 this.shapes.plane.draw(context, program_state, temp_transform, this.materials.grass);
-            }            
+            }
         }
 
 
@@ -167,15 +146,16 @@ export class Project extends Scene {
         model_transform_sky = model_transform_sky
             .times(Mat4.translation(character_position[0] / this.sky_shape_x, 0, character_position[2] / this.sky_shape_z));
         this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
-
-
-        // TODO: fix character.
-        let model_transform_object = program_state.camera_transform;
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
-                                                       .times(Mat4.scale(1, 4, 1))
-                                                       .times(Mat4.translation(0, -0.75, 4));                                                       
-        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
         
+        let model_transform_object = Mat4.identity();
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 2.6, -10));
+        this.shapes.tree.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
+        // TODO: fix character.
+//         let model_transform_object = program_state.camera_transform;
+//         model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
+//                                                        .times(Mat4.scale(1, 4, 1))
+//                                                        .times(Mat4.translation(0, -0.75, 4));                                                       
+//         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
     } // end display()
 } // end project class
 
