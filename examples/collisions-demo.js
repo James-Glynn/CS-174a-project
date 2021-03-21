@@ -13,6 +13,7 @@ export class Body
     }
   emplace( location_matrix, linear_velocity, angular_velocity, spin_axis = vec3( 0,0,0 ).randomized(1).normalized() )
     {                               // emplace(): assign the body's initial values, or overwrite them.
+      // Keiran: Collision
       this.center   = location_matrix.times( vec4( 0,0,0,1 ) ).to3();
       this.rotation = Mat4.translation( ...this.center.times( -1 ) ).times( location_matrix );
       this.previous = { center: this.center.copy(), rotation: this.rotation.copy() };
