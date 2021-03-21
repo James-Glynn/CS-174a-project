@@ -54,7 +54,112 @@ export class Project extends Scene {
         this.sky_shape_x = this.chunk_size * this.num_chunks_x;
         this.sky_shape_y = this.chunk_size * this.num_chunks_y;
         this.sky_shape_z = 100;
+        
+        // Biome vars
+        this.biome_memory = [];
+        this.biome_textures = [
+            {name : "grassland", 
+                ground : new Material(new Textured_Phong(), {
+                    color: hex_color("#000000"),
+                    ambient: .5, diffusivity: 0.5, specularity: 0.4,
+                    texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                sky : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                sun : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                tree : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                rock : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                totem : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+            },
+            {name : "desert",
+                ground : new Material(new Textured_Phong(), {
+                    color: hex_color("#000000"),
+                    ambient: .5, diffusivity: 0.5, specularity: 0.4,
+                    texture: new Texture("assets/stars.png", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                sky : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                sun : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                tree : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                rock : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                totem : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
 
+            },
+            {name : "rockland",
+                ground : new Material(new Textured_Phong(), {
+                    color: hex_color("#000000"),
+                    ambient: .5, diffusivity: 0.5, specularity: 0.4,
+                    texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                sky : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                sun : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                tree : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                rock : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+                totem : new Material(new Textured_Phong(), {
+                    color: hex_color("#999999"),
+                    ambient: .5, diffusivity: 0.1, specularity: 0.1,
+                    texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
+                    }),
+            },
+        ];
+        this.num_biomes = this.biome_textures.length;
+           
+
+        // Camera vars
         this.initial_camera_location = Mat4.look_at(vec3(0, this.height, 0), vec3(0, this.height, -3), vec3(0, 1, 0));
 
     }
@@ -112,10 +217,28 @@ export class Project extends Scene {
         program_state.lights = [];
 
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
-        
-//======Ground Chunks TODO: rename section?
+
+
+//======Biomes TODO: everything
         let character_position = vec3(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3]);
 
+        let curr_biome = Math.floor(character_position.norm() / this.chunk_size); // TODO: test 4 correctness.
+        //let num_biomes = 0;
+        //console.log(biome_num);
+        if ( !(curr_biome in this.biome_memory) ) {
+            // used to choose textures randomly
+            var chosen_biome = Math.floor(Math.random() * (this.num_biomes));
+            
+            // save the chosen texture into the texture_memory dict
+            this.biome_memory.push({num : curr_biome, type : this.biome_textures[chosen_biome]});
+            //num_biomes = Object.keys(this.biome_memory).length;
+        }
+        // TODO: else
+
+        
+        
+
+//======Ground Chunks TODO: rename section?
         /* Vector representing the distance to the origin, as measured in 
          * chunks. */
         let chunks_2_org = vec3(Math.floor(character_position[0] / this.chunk_size),
@@ -153,7 +276,8 @@ export class Project extends Scene {
                             .times(Mat4.translation(offset_x + i + 0.5, offset_y + j + 0.5, 0));
                 
                 // TODO: customize ground plane given chosen biome.
-                this.shapes.plane.draw(context, program_state, temp_transform, this.materials.grass);
+                this.draw_biome(context, program_state, temp_transform, curr_biome);
+                //this.shapes.plane.draw(context, program_state, temp_transform, this.materials.grass);
             }            
         }
 
@@ -166,13 +290,20 @@ export class Project extends Scene {
         this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.materials.texture_sample);
 
         // TODO: fix character.
-        let model_transform_object = program_state.camera_transform;
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
-                                                       .times(Mat4.scale(1, 4, 1))
-                                                       .times(Mat4.translation(0, -0.75, 4));                                                       
-        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
+//         let model_transform_object = program_state.camera_transform;
+//         model_transform_object = model_transform_object.times(Mat4.translation(0, 0, -17))
+//                                                        .times(Mat4.scale(1, 4, 1))
+//                                                        .times(Mat4.translation(0, -0.75, 4));                                                       
+//         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test2);
         
     } // end display()
+    
+    // TODO: include offset so that all 9 chunks dont change at once.
+    draw_biome(context, program_state, chunk_transform, biome) {
+        var chosen_biome = this.biome_memory[biome].type;
+        //console.log(chosen_biome.name)
+        this.shapes.plane.draw(context, program_state, chunk_transform, chosen_biome.ground);
+    }// end draw_biome
 } // end project class
 
 class Gouraud_Shader extends Shader {
