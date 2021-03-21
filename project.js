@@ -122,16 +122,13 @@ export class Project extends Scene {
          * under the player's current x,x-position. */
         var i;
         var j;
-        //console.log(model_transform_chunk.times( vec4( 0,0,0,1 ) ).to3());
-        let offset_x = -1 * Math.floor(this.num_chunks_x);
-        let offset_y = -1 * Math.floor(this.num_chunks_y);
-        //console.log(offset_x);
-        //console.log(offset_y);
+        let offset_x = -1 * Math.floor(this.num_chunks_x / 2);
+        let offset_y = -1 * Math.floor(this.num_chunks_y / 2);
         for (i = 0; i < this.num_chunks_x; i++) {
             for (j = 0; j < this.num_chunks_y; j++) {
-                // I think we are dividing the offsets by 4 because the cubes are 2 by 2 and its a scaled plane.
+                // 0.5 is added to translation, otherwise chunks were left-biased.
                 let temp_transform = model_transform_chunk
-                            .times(Mat4.translation(Math.floor(offset_x / 4) + i, Math.floor(offset_y / 4) + j, 0));
+                            .times(Mat4.translation(offset_x + i + 0.5, offset_y + j + 0.5, 0));
                 
                 // TODO: customize ground plane given chosen biome.
                 this.shapes.plane.draw(context, program_state, temp_transform, this.materials.grass);
