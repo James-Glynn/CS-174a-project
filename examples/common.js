@@ -743,6 +743,10 @@ class Movement_Controls extends Scene
 
       this.mouse_enabled_canvases = new Set();
       this.will_take_over_graphics_state = true;
+      this.forward = false;
+      this.backward = false;
+      this.left = false;
+      this.right = false;
     }
   set_recipient( matrix_closure, inverse_closure )
     {                               // set_recipient(): The camera matrix is not actually stored here inside Movement_Controls;
@@ -775,11 +779,15 @@ class Movement_Controls extends Scene
                                       // buttons with key bindings for affecting this scene, and live info readouts.
       this.control_panel.innerHTML += "Click and drag the scene to <br> spin your viewpoint around it.<br>";
       //this.key_triggered_button( "Up",     [ " " ], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0 );
-      this.key_triggered_button( "Forward",[ "w" ], () => this.thrust[2] =  1, undefined, () => this.thrust[2] = 0 );
+      this.key_triggered_button( "Forward",[ "w" ], () => {this.thrust[2] =  1; this.forward = true;}, 
+                                  undefined, () => {this.thrust[2] = 0; this.forward = false;});
       this.new_line();
-      this.key_triggered_button( "Left",   [ "a" ], () => this.thrust[0] =  1, undefined, () => this.thrust[0] = 0 );
-      this.key_triggered_button( "Back",   [ "s" ], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0 );
-      this.key_triggered_button( "Right",  [ "d" ], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0 );
+      this.key_triggered_button( "Left",   [ "a" ], () => {this.thrust[0] =  1; this.left = true;}, 
+                                  undefined, () => {this.thrust[0] = 0; this.left = false;});
+      this.key_triggered_button( "Back",   [ "s" ], () => {this.thrust[2] = -1; this.backward = true;}, 
+                                  undefined, () => {this.thrust[2] = 0; this.backward = false;});
+      this.key_triggered_button( "Right",  [ "d" ], () => {this.thrust[0] = -1; this.right = true;}, 
+                                  undefined, () => {this.thrust[0] = 0; this.right = false;} );
       this.new_line();
       // Keiran: Commented out for custom control
       //this.key_triggered_button( "Down",   [ "z" ], () => this.thrust[1] =  1, undefined, () => this.thrust[1] = 0 ); 
@@ -896,6 +904,12 @@ class Movement_Controls extends Scene
 //       if( this.mouse.anchor )
 //         this.third_person_arcball( dt * r );           
                                      // Log some values:
+      defs.forward = this.forward;
+      defs.backward = this.backward;
+      defs.left = this.left;
+      defs.right = this.right;
+      defs.pos = this.pos;
+      defs.thrust = this.thrust;
       this.pos    = this.inverse().times( vec4( 0,0,0,1 ) );
       this.z_axis = this.inverse().times( vec4( 0,0,1,0 ) );
     }
