@@ -28,6 +28,21 @@ export class Project extends Scene {
 
         // *** Materials
         this.materials = {
+            my_bump: new Material(new Bump_Phong(1), {
+                color: hex_color("#000000"),
+                ambient: .5, diffusivity: 0.5, specularity: 0.3,
+                texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR")
+            }),
+            fake_bump: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"),
+                ambient: .5, diffusivity: 0.5, specularity: 0.3,
+                texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR")
+            }),
+            non_bump: new Material(new Textured_Phong(1), {
+                color: hex_color("#000000"),
+                ambient: .5, diffusivity: 0.5, specularity: 0.3,
+                texture: new Texture("assets/grass.jpg")
+            }),
             test: new Material(new defs.Fake_Bump_Map(1),
                 {ambient: .4, diffusivity: .6}),
             test2: new Material(new Gouraud_Shader(),
@@ -43,8 +58,8 @@ export class Project extends Scene {
                 ambient: .5, diffusivity: 0.5, specularity: 0.4,
                 texture: new Texture("assets/grass.jpg")
             }),
-            tree_trunk: new Material(new defs.Phong_Shader(), {color: hex_color("#d2691e"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
-            leaves_text: new Material(new defs.Phong_Shader(), {color: hex_color("#336600"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
+            tree_trunk: new Material(new defs.Phong_Shader(1), {color: hex_color("#d2691e"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
+            leaves_text: new Material(new defs.Phong_Shader(1), {color: hex_color("#336600"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
                
         }
         this.shapes.plane.arrays.texture_coord = this.shapes.plane.arrays.texture_coord.map(function(x) {return x.times(15)});
@@ -95,7 +110,7 @@ export class Project extends Scene {
             Math.PI / 4, context.width / context.height, .1, 1000);
 
         // TODO: Adjust lighting
-        const light_position = vec4(0, 5, 5, 1);
+        const light_position = vec4(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3] + 1, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
         //program_state.lights = [];
 
@@ -187,13 +202,37 @@ export class Project extends Scene {
 
         
         // TODO: fix character.
-//         let model_transform_box = program_state.camera_transform;
-//         model_transform_box = model_transform_box.times(Mat4.translation(0, 0, -17))
-//                                                        .times(Mat4.scale(1, 4, 1))
-//                                                        .times(Mat4.translation(0, -0.75, 4));                                                       
-//         this.shapes.box.draw(context, program_state, model_transform_box, this.materials.test2);
+        let model_transform_box = Mat4.identity();
+        model_transform_box = model_transform_box.times(Mat4.translation(-2, 1, -4));                                                       
+        this.shapes.box.draw(context, program_state, model_transform_box, this.materials.fake_bump);
+        model_transform_box = model_transform_box.times(Mat4.translation(2, 0, 0)); 
+        this.shapes.box.draw(context, program_state, model_transform_box, this.materials.my_bump);
+        model_transform_box = model_transform_box.times(Mat4.translation(2, 0, 0)); 
+        this.shapes.box.draw(context, program_state, model_transform_box, this.materials.non_bump);
     } // end display()
 } // end project class
+
+class Bump_Phong extends Textured_Phong
+{                                
+  fragment_glsl_code()
+    {                            // ********* FRAGMENT SHADER ********* 
+      return this.shared_glsl_code() + `
+        varying vec2 f_tex_coord;
+        uniform sampler2D texture;
+
+        void main()
+          {                                                          // Sample the texture image in the correct place:
+            vec4 tex_color = texture2D( texture, f_tex_coord );
+            if( tex_color.w < .01 ) discard;
+                             // Slightly disturb normals based on sampling the same image that was used for texturing:
+            vec3 bumped_N  = N + tex_color.rgb - .5*vec3(1,1,1);
+                                                                     // Compute an initial (ambient) color:
+            gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
+                                                                     // Compute the final color with contributions from lights:
+            gl_FragColor.xyz += phong_model_lights( normalize( bumped_N ), vertex_worldspace );
+          } ` ;
+    }
+}
 
 class Gouraud_Shader extends Shader {
     // This is a Shader using Phong_Shader as template
