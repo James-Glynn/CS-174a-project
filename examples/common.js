@@ -42,7 +42,7 @@ class Square extends Shape
                                   // to re-use data of the common vertices between triangles.  This makes all the vertex 
                                   // arrays (position, normals, etc) smaller and more cache friendly.
   constructor()
-    { super( "position", "normal", "texture_coord" );
+    { super( "position", "normal", "texture_coord", "tangents" );
                                           // Specify the 4 square corner locations, and match those up with normal vectors:
       this.arrays.position      = Vector3.cast( [-1,-1,0], [1,-1,0], [-1,1,0], [1,1,0] );
       this.arrays.normal        = Vector3.cast( [0,0,1],   [0,0,1],  [0,0,1],  [0,0,1] );
@@ -52,12 +52,12 @@ class Square extends Shape
       this.indices.push( 0, 1, 2,     1, 3, 2 );
       
       // Init tangents to zero
-      this.tangents = Vector3.cast( [0,0,0], [0,0,0], [0,0,0], [0,0,0] );
-      this.bitangents = Vector3.cast( [0,0,0], [0,0,0], [0,0,0], [0,0,0] );
+      this.arrays.tangents = Vector3.cast( [0,0,0], [0,0,0], [0,0,0], [0,0,0] );
+      //this.bitangents = Vector3.cast( [0,0,0], [0,0,0], [0,0,0], [0,0,0] );
 
       /* We need to calculate tangents for the bump mapping shader.
        * Begin iteratig indices */
-      var i;
+      var i, j;
       var p0, p1, p2; // indices
       var v0, v1, v2; // verteces
       var t0, t1, t2; // text-coords
@@ -65,20 +65,23 @@ class Square extends Shape
       var edge1, edge2;
       var delta_diff, norm_factor;
       var tan;
-      for ( i = 0; i < this.indices.length - 3; i = i + 3) {
-        p0  = this.indices[i];
-        p1  = this.indices[i + 1];
-        p2  = this.indices[i + 2];
-        
+      j = 0;
+      for ( i = 0; i < this.indices.lengt; i++) {
+        p0  = this.indices[j];
+        p1  = this.indices[j + 1];
+        p2  = this.indices[j + 2];
+        console.log("i " + j);
         if (p0 == p2 || p0 == p1 || p1 == p2) { continue; }
 
-        v0 = this.arrays.position[i];
-        v1 = this.arrays.position[i + 1];
-        v2 = this.arrays.position[i + 2];
+        v0 = this.arrays.position[j];
+        v1 = this.arrays.position[j + 1];
+        v2 = this.arrays.position[j + 2];
 
-        t0 = this.arrays.texture_coord[i];
-        t1 = this.arrays.texture_coord[i + 1];
-        t2 = this.arrays.texture_coord[i + 2];
+        t0 = this.arrays.texture_coord[j];
+        t1 = this.arrays.texture_coord[j + 1];
+        t2 = this.arrays.texture_coord[j + 2];
+        console.log("t0: " + t0);
+        console.log("t1: " + t1);
 
         du1 = t1[0] - t0[0];
         du2 = t2[0] - t0[0];
@@ -100,14 +103,12 @@ class Square extends Shape
                     norm_factor * (dv2 * edge1[1] - dv1 * edge2[1]),
                     norm_factor * (dv2 * edge1[2] - dv1 * edge2[2]));
 
-        this.tangents[0] += tan.normalize();
-        this.tangents[1] += tan.normalize();
-        this.tangents[2] += tan.normalize();
-
-
-      }
-      
-
+        this.arrays.tangents[0] += tan.normalize();
+        this.arrays.tangents[1] += tan.normalize();
+        this.arrays.tangents[2] += tan.normalize();
+        console.log("hi");
+        j += 3;
+      }      
       //this.tangents
     }
 }
@@ -193,13 +194,33 @@ class Windmill extends Shape
 }
 
 
-const Cube = defs.Cube =
-class Cube extends Shape
+// const Cube = defs.Cube =
+// class Cube extends Shape
+// {                         // **Cube** A closed 3D shape, and the first example of a compound shape (a Shape constructed
+//                           // out of other Shapes).  A cube inserts six Square strips into its own arrays, using six
+//                           // different matrices as offsets for each square.
+//   constructor()  
+//     { super( "position", "normal", "texture_coord" );
+//                           // Loop 3 times (for each axis), and inside loop twice (for opposing cube sides):
+//       for( var i = 0; i < 3; i++ )
+//         for( var j = 0; j < 2; j++ )
+//         { var square_transform = Mat4.rotation( i == 0 ? Math.PI/2 : 0,    1,0,0 )
+//                          .times( Mat4.rotation( Math.PI * j - ( i == 1 ? Math.PI/2 : 0 ),   0,1,0 ) )
+//                          .times( Mat4.translation( 0,0,1 ) );
+//                                   // Calling this function of a Square (or any Shape) copies it into the specified
+//                                   // Shape (this one) at the specified matrix offset (square_transform):
+//           Square.insert_transformed_copy_into( this, [], square_transform );
+//         }
+//     }
+// }
+
+const Bump_Box = defs.Bump_Box =
+class Bump_Box extends Shape
 {                         // **Cube** A closed 3D shape, and the first example of a compound shape (a Shape constructed
                           // out of other Shapes).  A cube inserts six Square strips into its own arrays, using six
                           // different matrices as offsets for each square.
   constructor()  
-    { super( "position", "normal", "texture_coord" );
+    { super( "position", "normal", "texture_coord", "tangents" );
                           // Loop 3 times (for each axis), and inside loop twice (for opposing cube sides):
       for( var i = 0; i < 3; i++ )
         for( var j = 0; j < 2; j++ )
@@ -712,7 +733,7 @@ class Textured_Phong extends Phong_Shader
   vertex_glsl_code()           // ********* VERTEX SHADER *********
     { return this.shared_glsl_code() + `
         varying vec2 f_tex_coord;
-        attribute vec3 position, normal;                            // Position is expressed in object coordinates.
+        attribute vec3 position, normal, tangents;                            // Position is expressed in object coordinates.
         attribute vec2 texture_coord;
         
         uniform mat4 model_transform;
