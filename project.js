@@ -32,8 +32,11 @@ export class Project extends Scene {
 
         // *** Materials
         this.materials = {
-            test: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: .4, diffusivity: .6}),
+            test: new Material(new Fake_Bump_Map(1), {
+                color: hex_color("#000000"),
+                ambient: .5, diffusivity: 0.5, specularity: 0.4,
+                texture: new Texture("assets/rock.png")
+            }),
             test2: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#992828")}),
             ring: new Material(new Ring_Shader()),
@@ -307,16 +310,14 @@ export class Project extends Scene {
             .times(Mat4.translation(character_position[0] / this.sky_shape_x, 0, character_position[2] / this.sky_shape_z));
         this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.biome_memory[curr_biome].type.sky);
         
-
+//======Monument TODO: customize skybox given chosen biome.
         let model_transform_object = Mat4.identity();
-        model_transform_object = model_transform_object.times(Mat4.translation(0, 1.0, -10));
-        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 1.0, 10));
+        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.test);
         
-        //vector3.norm and pass that into a sine wave to transfer the lanturn up and down
-
         let model_transform_leaves2 = Mat4.identity();
-        model_transform_leaves2 = model_transform_leaves2.times(Mat4.translation(0, 3, -10));
-        this.shapes.box.draw(context, program_state, model_transform_leaves2, this.materials.leaves_text);
+        model_transform_leaves2 = model_transform_leaves2.times(Mat4.translation(0, 3, 10));
+        this.shapes.box.draw(context, program_state, model_transform_leaves2, this.materials.test);
         
         let dist_val = character_position.norm();
         let sine = 0.1 * Math.sin(dist_val);
