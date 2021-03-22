@@ -50,6 +50,65 @@ class Square extends Shape
       this.arrays.texture_coord = Vector.cast( [0,0],     [1,0],    [0,1],    [1,1]   );
                                                      // Use two triangles this time, indexing into four distinct vertices:
       this.indices.push( 0, 1, 2,     1, 3, 2 );
+      
+      // Init tangents to zero
+      this.tangents = Vector3.cast( [0,0,0], [0,0,0], [0,0,0], [0,0,0] );
+      this.bitangents = Vector3.cast( [0,0,0], [0,0,0], [0,0,0], [0,0,0] );
+
+      /* We need to calculate tangents for the bump mapping shader.
+       * Begin iteratig indices */
+      var i;
+      var p0, p1, p2; // indices
+      var v0, v1, v2; // verteces
+      var t0, t1, t2; // text-coords
+      var du1, du2, dv1, dv2; // delta u's & v's
+      var edge1, edge2;
+      var delta_diff, norm_factor;
+      var tan;
+      for ( i = 0; i < this.indices.length - 3; i = i + 3) {
+        p0  = this.indices[i];
+        p1  = this.indices[i + 1];
+        p2  = this.indices[i + 2];
+        
+        if (p0 == p2 || p0 == p1 || p1 == p2) { continue; }
+
+        v0 = this.arrays.position[i];
+        v1 = this.arrays.position[i + 1];
+        v2 = this.arrays.position[i + 2];
+
+        t0 = this.arrays.texture_coord[i];
+        t1 = this.arrays.texture_coord[i + 1];
+        t2 = this.arrays.texture_coord[i + 2];
+
+        du1 = t1[0] - t0[0];
+        du2 = t2[0] - t0[0];
+        dv1 = t1[1] - t0[1];
+        dv2 = t2[1] - t0[1];
+        
+        edge1 = v1 - v0;
+        edge2 = v2 - v0;
+        
+
+        // Next step(s) is equivalent of solving the TBN matrix for T.
+        delta_diff = ( (du1 * dv2) - (du2 * dv1) );
+
+        if (delta_diff == 0) { continue; } // avoid div by zero
+
+        norm_factor = 1 / ( (du1 * dv2) - (du2 * dv1) );
+        
+        tan = vec3( norm_factor * (dv2 * edge1[0] - dv1 * edge2[0]),
+                    norm_factor * (dv2 * edge1[1] - dv1 * edge2[1]),
+                    norm_factor * (dv2 * edge1[2] - dv1 * edge2[2]));
+
+        this.tangents[0] += tan.normalize();
+        this.tangents[1] += tan.normalize();
+        this.tangents[2] += tan.normalize();
+
+
+      }
+      
+
+      //this.tangents
     }
 }
 

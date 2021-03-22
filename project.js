@@ -245,6 +245,7 @@ class Bump_Phong extends Textured_Phong
         uniform sampler2D bump_map_y;
         // TODO: issue with grads or tans?
         
+        
 
         void main()
           {                                                          // Sample the texture image in the correct place:
