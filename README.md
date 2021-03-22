@@ -2,6 +2,8 @@
 By: Keiran Glynn (105364966)
 	Eugene Choi (905368197)
 
+
+![Game](C:\Users\sedfr\OneDrive\Documents\GitHub\CS-174a-project)
 1. Introduciton and Implementation:
   Our project is an endless world simulation, in which the player can walk 
 through a procedurally generated world. While deciding what to create for this
