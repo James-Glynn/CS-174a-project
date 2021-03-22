@@ -305,19 +305,14 @@ export class Project extends Scene {
         this.shapes.sky_sphere.draw(context, program_state, model_transform_sky, this.biome_memory[curr_biome].type.sky);
         
 
-//         let model_transform_object = Mat4.identity();
-//         model_transform_object = model_transform_object.times(Mat4.translation(0, 1.7, -10));
-//         this.shapes.tree_stump.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
+        let model_transform_object = Mat4.identity();
+        model_transform_object = model_transform_object.times(Mat4.translation(0, 1.0, -10));
+        this.shapes.box.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
         
-//         let model_transform_leaves2 = Mat4.identity();
-//         model_transform_leaves2 = model_transform_leaves2.times(Mat4.translation(.1, 2.3, -10))
-//                                                          .times(Mat4.scale(1.1, 1.1, 1.1));
-//         this.shapes.leaves2.draw(context, program_state, model_transform_leaves2, this.materials.leaves_text);
+        let model_transform_leaves2 = Mat4.identity();
+        model_transform_leaves2 = model_transform_leaves2.times(Mat4.translation(0, 3, -10));
+        this.shapes.box.draw(context, program_state, model_transform_leaves2, this.materials.leaves_text);
 
-
-//         model_transform_object = Mat4.identity();
-//         model_transform_object = model_transform_object.times(Mat4.translation(7, 1.7, -15));
-//         this.shapes.tree_stump.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
 
 
 //         model_transform_leaves2 = Mat4.identity();
