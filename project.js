@@ -31,7 +31,9 @@ export class Project extends Scene {
             my_bump: new Material(new Bump_Phong(1), {
                 color: hex_color("#000000"),
                 ambient: .5, diffusivity: 0.5, specularity: 0.3,
-                texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR")
+                texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR"),
+                bump_map_x: new Texture("assets/grass_grad_x.jpg"),
+                bump_map_y: new Texture("assets/grass_grad_y.jpg"),
             }),
             fake_bump: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"),
@@ -213,25 +215,59 @@ export class Project extends Scene {
 } // end project class
 
 class Bump_Phong extends Textured_Phong
-{                                
+{ 
+  vertex_glsl_code()           // ********* VERTEX SHADER *********
+    { return this.shared_glsl_code() + `
+        varying vec2 f_tex_coord;
+        attribute vec3 position, normal;                            // Position is expressed in object coordinates.
+        attribute vec2 texture_coord;
+        
+        uniform mat4 model_transform;
+        uniform mat4 projection_camera_model_transform;
+
+        void main()
+          {                                                                   // The vertex's final resting place (in NDCS):
+            gl_Position = projection_camera_model_transform * vec4( position, 1.0 );
+                                                                              // The final normal vector in screen space.
+            N = normalize( mat3( model_transform ) * normal / squared_scale);
+            
+            vertex_worldspace = ( model_transform * vec4( position, 1.0 ) ).xyz;
+                                              // Turn the per-vertex texture coordinate into an interpolated variable.
+            f_tex_coord = texture_coord;
+          } ` ;
+    }
   fragment_glsl_code()
     {                            // ********* FRAGMENT SHADER ********* 
       return this.shared_glsl_code() + `
         varying vec2 f_tex_coord;
         uniform sampler2D texture;
+        uniform sampler2D bump_map_x;
+        uniform sampler2D bump_map_y;
+        // TODO: issue with grads or tans?
+        
 
         void main()
           {                                                          // Sample the texture image in the correct place:
+            vec3 my_normal = normalize( N );
+            vec3 my_tan = normalize( vertex_worldspace );
+            vec3 my_binormal = cross(my_tan, my_normal);
+
+            float my_x_grad = texture2D(bump_map_x , f_tex_coord).r;
+            float my_y_grad = texture2D(bump_map_y , f_tex_coord).r;
+
+            vec3 my_disturb_vec = my_x_grad * my_tan + my_y_grad * my_binormal;
+
             vec4 tex_color = texture2D( texture, f_tex_coord );
             if( tex_color.w < .01 ) discard;
                              // Slightly disturb normals based on sampling the same image that was used for texturing:
-            vec3 bumped_N  = N + tex_color.rgb - .5*vec3(1,1,1);
+            vec3 bumped_N  = N + my_disturb_vec;
                                                                      // Compute an initial (ambient) color:
             gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
                                                                      // Compute the final color with contributions from lights:
             gl_FragColor.xyz += phong_model_lights( normalize( bumped_N ), vertex_worldspace );
           } ` ;
     }
+
 }
 
 class Gouraud_Shader extends Shader {
