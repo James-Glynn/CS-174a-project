@@ -24,6 +24,8 @@ export class Project extends Scene {
             leaves: new Shape_From_File("assets/leaves.obj"),
             leaves2: new Shape_From_File("assets/leaves2.obj"),
             final_leaves: new Shape_From_File("assets/final_tree_leaves.obj"),
+            lanturn: new Shape_From_File("assets/lanturn.obj"),
+            lanturn_handle: new Shape_From_File("assets/lanturn_handle.obj"),
             // TODO:  Fill in as many additional shape instances as needed in this key/value table.
             //        (Requirement 1)
         };
@@ -45,6 +47,7 @@ export class Project extends Scene {
                 ambient: .5, diffusivity: 0.5, specularity: 0.4,
                 texture: new Texture("assets/grass.jpg")
             }),
+            handle: new Material(new defs.Fake_Bump_Map(1), {color: hex_color("#d2691e"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
             tree_trunk: new Material(new defs.Phong_Shader(), {color: hex_color("#d2691e"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
             leaves_text: new Material(new defs.Phong_Shader(), {color: hex_color("#336600"), ambient: .05, diffusivity: 0.9, specularity: 0.2}),
                
@@ -74,12 +77,12 @@ export class Project extends Scene {
         // textures into the project (like instead of grass, sand, etc).
         this.biome_textures = {
             grassland : {
-                ground : new Material(new Textured_Phong(), {
+                ground : new Material(new Textured_Phong(1), {
                     color: hex_color("#000000"),
                     ambient: .5, diffusivity: 0.5, specularity: 0.4,
                     texture: new Texture("assets/grass.jpg", "LINEAR_MIPMAP_LINEAR")
                     }),
-                sky : new Material(new Textured_Phong(), {
+                sky : new Material(new Textured_Phong(1), {
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
@@ -90,11 +93,11 @@ export class Project extends Scene {
                     diffusivity: 0.9, 
                     specularity: 0.2
                     }),
-                leaf : new Material(new Textured_Phong(), { // Eugene: like here on this line
+                leaf : new Material(new Textured_Phong(1), { // Eugene: like here on this line
                     color: hex_color("#336600"),
                     ambient: .05, diffusivity: 0.9, specularity: 0.2
                     }),
-                totem : new Material(new Textured_Phong(), {
+                totem : new Material(new Textured_Phong(1), {
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
@@ -106,7 +109,7 @@ export class Project extends Scene {
                     ambient: .5, diffusivity: 0.5, specularity: 0.4,
                     texture: new Texture("assets/sand.jpg")
                     }),
-                sky : new Material(new Textured_Phong(), {
+                sky : new Material(new Textured_Phong(1), {
                     color: hex_color("#0000b0"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/desert_sky.jpg", "LINEAR_MIPMAP_LINEAR")
@@ -117,11 +120,11 @@ export class Project extends Scene {
                     diffusivity: 0.5, 
                     specularity: 0.1,
                     }),
-                leaf : new Material(new Textured_Phong(), { // Eugene: like here on this line
+                leaf : new Material(new Textured_Phong(1), { // Eugene: like here on this line
                     color: hex_color("#ff32b1"),
                     ambient: .05, diffusivity: 0.9, specularity: 0.2
                     }),
-                totem : new Material(new Textured_Phong(), {
+                totem : new Material(new Textured_Phong(1), {
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
@@ -146,7 +149,7 @@ export class Project extends Scene {
                     color: hex_color("#33ccff"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     }),
-                totem : new Material(new Textured_Phong(), {
+                totem : new Material(new Textured_Phong(1), {
                     color: hex_color("#999999"),
                     ambient: .5, diffusivity: 0.1, specularity: 0.1,
                     texture: new Texture("assets/sky.jpg", "LINEAR_MIPMAP_LINEAR")
@@ -215,7 +218,7 @@ export class Project extends Scene {
             Math.PI / 4, context.width / context.height, .1, 1000);
 
         // TODO: Adjust lighting
-        const light_position = vec4(0, 5, 5, 1);
+        const light_position = vec4(program_state.camera_transform[0][3], this.height, program_state.camera_transform[2][3], 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
         //program_state.lights = [];
 
@@ -309,11 +312,20 @@ export class Project extends Scene {
         model_transform_object = model_transform_object.times(Mat4.translation(0, 1.0, -10));
         this.shapes.box.draw(context, program_state, model_transform_object, this.materials.tree_trunk);
         
+        //vector3.norm and pass that into a sine wave to transfer the lanturn up and down
+
         let model_transform_leaves2 = Mat4.identity();
         model_transform_leaves2 = model_transform_leaves2.times(Mat4.translation(0, 3, -10));
         this.shapes.box.draw(context, program_state, model_transform_leaves2, this.materials.leaves_text);
-
-
+        
+        let dist_val = character_position.norm();
+        let sine = 0.1 * Math.sin(dist_val);
+        let model_transform_lanturn = Mat4.identity()
+                                    .times(program_state.camera_transform)
+                                    .times(Mat4.translation(.5, -.8 + sine, -2))
+                                    .times(Mat4.scale(.5, .5, .5));
+                                    //.times(Mat4.translation(0, -0,75, 4));
+        this.shapes.lanturn.draw(context, program_state, model_transform_lanturn, this.materials.leaves_text);                        
 
 //         model_transform_leaves2 = Mat4.identity();
 //         model_transform_leaves2 = model_transform_leaves2.times(Mat4.translation(7.1, 2.3, -15))
