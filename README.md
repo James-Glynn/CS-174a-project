@@ -1,5 +1,5 @@
-# tiny-graphics.js
-By: Keiran Glynn (UID)
+# Endless Wanderer
+By: Keiran Glynn
 	Eugene Choi (905368197)
 
 1. Introduciton and Implementation:
